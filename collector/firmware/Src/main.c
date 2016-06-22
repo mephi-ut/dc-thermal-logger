@@ -39,11 +39,35 @@
 #include <string.h>
 #include "EtherShield.h"
 
+#define SENSORS		16
+#define MAX_CHANNELS	16
+
 #define NET_BUF_SIZE (1<<10)
 #define UART_BUF_SIZE (NET_BUF_SIZE << 2)
 
 #define MAX(a,b) ((a)>(b)?(a):(b))
 #define BUF_SIZE MAX(NET_BUF_SIZE, UART_BUF_SIZE)
+
+typedef uint16_t dataitem_t;
+
+struct sensorcommand {
+	dataitem_t	command_id;
+	dataitem_t	 sensor_id;
+	dataitem_t	channels;
+	dataitem_t	channel[MAX_CHANNELS];
+};
+typedef struct sensorcommand sensorcommand_t;
+
+struct collectorcommand {
+	dataitem_t	command_id;
+	dataitem_t	 sensor_id;
+};
+typedef struct collectorcommand collectorcommand_t;
+
+enum command_id {
+	CMD_SETDATA,
+	CMD_GETDATA,
+};
 
 /* USER CODE END Includes */
 
@@ -163,6 +187,28 @@ uint16_t packetloop_icmp_udp(uint8_t *buf,uint16_t plen)
 
 /* USER CODE BEGIN 0 */
 
+#define NET_HEADERS_LENGTH (ETH_HEADER_LEN + IP_HEADER_LEN + UDP_HEADER_LEN)
+#define RECV_TIMEOUT 1000
+
+static uint8_t ticked = 0;
+uint8_t net_buf[NET_BUF_SIZE + 1];
+
+void main_tick() {
+	ticked = 1;
+
+	return;
+}
+
+void HAL_Delay(__IO uint32_t Delay)
+{
+	uint32_t tickstart = 0;
+	tickstart = HAL_GetTick();
+	while((HAL_GetTick() - tickstart) < Delay)
+	{
+		packetloop_icmp_udp(net_buf, ES_enc28j60PacketReceive(NET_BUF_SIZE, net_buf));
+	}
+}
+
 /* USER CODE END 0 */
 
 int main(void)
@@ -187,49 +233,114 @@ int main(void)
   MX_USART1_UART_Init();
 
   /* USER CODE BEGIN 2 */
-	static uint8_t uart_buf[UART_BUF_SIZE], *uart_buf_parsed, *uart_buf_filled, *uart_buf_end;
+	uint8_t  uart_recvbuf[UART_BUF_SIZE], uart_sendbuf[UART_BUF_SIZE];
+	sensorcommand_t    *scmd =    (sensorcommand_t *)uart_recvbuf;
+	collectorcommand_t *ccmd = (collectorcommand_t *)uart_sendbuf;
 
-	uint16_t netanswer_initialpacket_len = 0;
-	uint8_t  mac[] = {0x02, 0x03, 0x04, 0x05, 0x06, 0x08};
-	uint8_t  ip[]  = {10,  4, 33, 124};
-	static uint8_t net_buf[NET_BUF_SIZE + 1];
-	static uint8_t netanswer_buf[NET_BUF_SIZE + 1];
+	HAL_StatusTypeDef r = HAL_UART_Receive_DMA(&huart1, uart_recvbuf, UART_BUF_SIZE);
+	if (r != HAL_OK)
+		error(4+r, 0);
+
+	uint8_t   local_mac[] = {0x02, 0x03, 0x04, 0x05, 0x06, 0x08};
+	uint8_t  remote_mac[] = {0x00, 0x1b, 0x21, 0x39, 0x37, 0x26};
+	uint8_t   local_ip[]  = {10,  4, 33, 124};
+	uint8_t  remote_ip[]  = {10,  4, 33, 242};
 
 	ES_enc28j60SpiInit(&hspi1);
-	ES_enc28j60Init(mac);
+	ES_enc28j60Init(local_mac);
 
 	uint8_t enc28j60_rev = ES_enc28j60Revision();
 	if (enc28j60_rev <= 0)
 		error(2, 0);
 
-	ES_init_ip_arp_udp_tcp(mac, ip, 80);
+	ES_init_ip_arp_udp_tcp(local_mac, local_ip, 80);
 
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-	// ICMP echo server
+	/* // ICMP echo server
 	while (1)
 	{
 		packetloop_icmp_udp(net_buf, ES_enc28j60PacketReceive(NET_BUF_SIZE, net_buf));
-	}
+	}*/
 
-	// UDP echo server
+
 	while (1)
 	{
-		uint16_t dat_p;
+		uint8_t awaitingForSending = 0;
+		dataitem_t channels;
+		dataitem_t *net_data = (dataitem_t *)(&net_buf[NET_HEADERS_LENGTH]);
 
-		dat_p = packetloop_icmp_udp(net_buf, ES_enc28j60PacketReceive(NET_BUF_SIZE, net_buf));
-		if (dat_p != 0) {
-			memcpy(uart_buf, &net_buf[dat_p], info_data_len);
-			make_udp_reply_from_request(net_buf, (char *)uart_buf, info_data_len, 23);
+		if (awaitingForSending) {
+			ES_send_udp_data2(net_buf, remote_mac, NET_HEADERS_LENGTH + channels*sizeof(*net_data), 26524, remote_ip, 36400);
+			awaitingForSending = 0;
+		}
+		packetloop_icmp_udp(net_buf, ES_enc28j60PacketReceive(NET_BUF_SIZE, net_buf));
+
+		if (ticked) {
+			ticked = 0;
+			static uint8_t  awaitingForReceive = 0;
+			static uint16_t timeoutCounter;
+			static dataitem_t sensor_id = 0;
+
+			if (awaitingForReceive) {
+				timeoutCounter++;
+				if (timeoutCounter > RECV_TIMEOUT) {
+					//error(3, 0);
+					blink(3, 100);
+					__HAL_UART_FLUSH_DRREGISTER(&huart1);
+					awaitingForReceive = 0;
+					continue;
+				}
+
+				uint16_t itemsReceived = (UART_BUF_SIZE - huart1.hdmarx->Instance->CNDTR) / sizeof(dataitem_t);
+				if (itemsReceived > 0) {
+					if (scmd->command_id != CMD_SETDATA) {
+						error(3, 0);
+					}
+				}
+				if (itemsReceived > 1) {
+					if (sensor_id != scmd->sensor_id) {
+						error(4, 0);
+					}
+				}
+				if (itemsReceived > 2) {
+					channels  = scmd->channels;
+				}
+
+				if (itemsReceived-1 == channels) {
+					net_data[0] = sensor_id;
+					net_data[1] = channels;
+					int i = 0;
+					while (i < channels) {
+						net_data[i+2] = scmd->channel[i];
+						i++;
+					}
+					__HAL_UART_FLUSH_DRREGISTER(&huart1);
+					awaitingForReceive = 0;
+					awaitingForSending = 1;
+				}
+
+				__HAL_UART_FLUSH_DRREGISTER(&huart1);
+
+				continue;
+			}
+
+			if (awaitingForSending) {
+				continue;
+			}
+
+			ccmd->command_id = CMD_GETDATA;
+			ccmd->sensor_id  = sensor_id;
+			HAL_UART_Transmit_DMA(&huart1, (uint8_t *)ccmd, sizeof(*ccmd));
+
+			timeoutCounter     = 0;
+			awaitingForReceive = 1;
+			continue;
 		}
 	}
 
-	while (1)
-	{
-		error(1, 1);
-	}
   /* USER CODE END WHILE */
 
   /* USER CODE BEGIN 3 */

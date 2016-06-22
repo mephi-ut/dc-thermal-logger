@@ -37,6 +37,8 @@
 
 /* USER CODE BEGIN 0 */
 
+extern void main_tick();
+
 /* USER CODE END 0 */
 
 /* External variables --------------------------------------------------------*/
@@ -55,7 +57,7 @@ extern DMA_HandleTypeDef hdma_usart1_tx;
 void SysTick_Handler(void)
 {
   /* USER CODE BEGIN SysTick_IRQn 0 */
-
+	main_tick();
   /* USER CODE END SysTick_IRQn 0 */
   HAL_IncTick();
   HAL_SYSTICK_IRQHandler();

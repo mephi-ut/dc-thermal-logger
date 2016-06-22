@@ -92,7 +92,7 @@ BIN = $(CP) -O binary -S
 #######################################
 # macros for gcc
 AS_DEFS =
-C_DEFS = -D__weak="__attribute__((weak))" -D__packed="__attribute__((__packed__))" -DUSE_HAL_DRIVER -DSTM32F103xB -DETHERNET_LED_GPIO=GPIOC -DETHERNET_LED_PIN=LED_B_Pin -DETHERNET_CS_GPIO=GPIOA -DETHERNET_CS_PIN=SPI1_CS_Pin
+C_DEFS = -D__weak="__attribute__((weak))" -D__packed="__attribute__((__packed__))" -DUSE_HAL_DRIVER -DSTM32F103xB -DETHERNET_LED_GPIO=GPIOC -DETHERNET_LED_PIN=LED_B_Pin -DETHERNET_CS_GPIO=GPIOA -DETHERNET_CS_PIN=SPI1_CS_Pin -DETHERNET_CS_DELAY=250
 # includes for gcc
 AS_INCLUDES =
 C_INCLUDES = -IDrivers/STM32F1xx_HAL_Driver/Inc

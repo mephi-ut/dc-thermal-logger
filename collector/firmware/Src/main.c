@@ -208,6 +208,11 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+	// ICMP echo server
+	while (1)
+	{
+		packetloop_icmp_udp(net_buf, ES_enc28j60PacketReceive(NET_BUF_SIZE, net_buf));
+	}
 
 	// UDP echo server
 	while (1)

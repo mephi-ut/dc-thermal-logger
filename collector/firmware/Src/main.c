@@ -77,22 +77,22 @@ void error (float error_num, char infinite) {
 		while (1) {
 			int i = 0;
 			while (i++ < ((int)((float)(error_num) / 1) + 1) ) {
-				GPIOC->BSRR = LED_B_Pin;
+				GPIOC->BSRR = LED_R_Pin;
 				HAL_Delay(1000 / error_num);
-				GPIOC->BSRR = LED_B_Pin << 16;
+				GPIOC->BSRR = LED_R_Pin << 16;
 				HAL_Delay(1000 / error_num);
 			}
 		};
 
-	GPIOC->BSRR = LED_B_Pin;
+	GPIOC->BSRR = LED_R_Pin;
 	HAL_Delay(1000);
-	GPIOC->BSRR = LED_B_Pin << 16;
+	GPIOC->BSRR = LED_R_Pin << 16;
 
 	int i=0;
 	while (i++ < error_num) {
-		GPIOA->BSRR = GPIO_PIN_5;
+		GPIOC->BSRR = LED_R_Pin;
 		HAL_Delay(300);
-		GPIOA->BSRR = GPIO_PIN_5 << 16;
+		GPIOC->BSRR = LED_R_Pin << 16;
 		HAL_Delay(200);
 	}
 
@@ -105,9 +105,9 @@ void error (float error_num, char infinite) {
 static inline void blink(int times, int delay) {
 	int i = 0;
 	while (i++ < times) {
-		GPIOA->BSRR = GPIO_PIN_5;
+		GPIOC->BSRR = LED_R_Pin;
 		HAL_Delay(delay);
-		GPIOA->BSRR = GPIO_PIN_5 << 16;
+		GPIOC->BSRR = LED_R_Pin << 16;
 		HAL_Delay(delay);
 	}
 
@@ -187,11 +187,40 @@ int main(void)
   MX_USART1_UART_Init();
 
   /* USER CODE BEGIN 2 */
+	static uint8_t uart_buf[UART_BUF_SIZE], *uart_buf_parsed, *uart_buf_filled, *uart_buf_end;
+
+	uint16_t netanswer_initialpacket_len = 0;
+	uint8_t  mac[] = {0x02, 0x03, 0x04, 0x05, 0x06, 0x08};
+	uint8_t  ip[]  = {10,  4, 33, 124};
+	static uint8_t net_buf[NET_BUF_SIZE + 1];
+	static uint8_t netanswer_buf[NET_BUF_SIZE + 1];
+
+	ES_enc28j60SpiInit(&hspi1);
+	ES_enc28j60Init(mac);
+
+	uint8_t enc28j60_rev = ES_enc28j60Revision();
+	if (enc28j60_rev <= 0)
+		error(2, 0);
+
+	ES_init_ip_arp_udp_tcp(mac, ip, 80);
 
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+
+	// UDP echo server
+	while (1)
+	{
+		uint16_t dat_p;
+
+		dat_p = packetloop_icmp_udp(net_buf, ES_enc28j60PacketReceive(NET_BUF_SIZE, net_buf));
+		if (dat_p != 0) {
+			memcpy(uart_buf, &net_buf[dat_p], info_data_len);
+			make_udp_reply_from_request(net_buf, (char *)uart_buf, info_data_len, 23);
+		}
+	}
+
 	while (1)
 	{
 		error(1, 1);
@@ -312,6 +341,12 @@ void MX_GPIO_Init(void)
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Speed = GPIO_SPEED_LOW;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : SPI1_CS_Pin */
+  GPIO_InitStruct.Pin = SPI1_CS_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Speed = GPIO_SPEED_LOW;
+  HAL_GPIO_Init(SPI1_CS_GPIO_Port, &GPIO_InitStruct);
 
 }
 

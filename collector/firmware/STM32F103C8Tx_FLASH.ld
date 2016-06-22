@@ -1,0 +1,1 @@
+SW4STM32/firmware Configuration/STM32F103C8Tx_FLASH.ld

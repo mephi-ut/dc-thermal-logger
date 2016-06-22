@@ -1,0 +1,3 @@
+[submodule "collector/firmware/Drivers/enc28j60"]
+	path = collector/firmware/Drivers/enc28j60
+	url = https://github.com/xaionaro/stm32-enc28j60

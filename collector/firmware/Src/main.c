@@ -111,6 +111,7 @@ void error (float error_num, char infinite) {
 	GPIOC->BSRR = LED_R_Pin;
 	HAL_Delay(1000);
 	GPIOC->BSRR = LED_R_Pin << 16;
+	HAL_Delay(100);
 
 	int i=0;
 	while (i++ < error_num) {
@@ -237,9 +238,11 @@ int main(void)
 	sensorcommand_t    *scmd =    (sensorcommand_t *)uart_recvbuf;
 	collectorcommand_t *ccmd = (collectorcommand_t *)uart_sendbuf;
 
-	HAL_StatusTypeDef r = HAL_UART_Receive_DMA(&huart1, uart_recvbuf, UART_BUF_SIZE);
-	if (r != HAL_OK)
-		error(4+r, 0);
+	{
+		HAL_StatusTypeDef r = HAL_UART_Receive_DMA(&huart1, uart_recvbuf, UART_BUF_SIZE);
+		if (r != HAL_OK)
+			error(4+r, 0);
+	}
 
 	uint8_t   local_mac[] = {0x02, 0x03, 0x04, 0x05, 0x06, 0x08};
 	uint8_t  remote_mac[] = {0x00, 0x1b, 0x21, 0x39, 0x37, 0x26};
@@ -278,11 +281,10 @@ int main(void)
 		}
 		packetloop_icmp_udp(net_buf, ES_enc28j60PacketReceive(NET_BUF_SIZE, net_buf));
 
-		if (ticked) {
-			ticked = 0;
+		{
 			static uint8_t  awaitingForReceive = 0;
 			static uint16_t timeoutCounter;
-			static dataitem_t sensor_id = 0;
+			static dataitem_t sensor_id = ~0;
 
 			if (awaitingForReceive) {
 				timeoutCounter++;
@@ -291,6 +293,7 @@ int main(void)
 					blink(3, 100);
 					__HAL_UART_FLUSH_DRREGISTER(&huart1);
 					awaitingForReceive = 0;
+					GPIOC->BSRR = LED_G_Pin << 16;
 					continue;
 				}
 
@@ -320,6 +323,7 @@ int main(void)
 					__HAL_UART_FLUSH_DRREGISTER(&huart1);
 					awaitingForReceive = 0;
 					awaitingForSending = 1;
+					GPIOC->BSRR = LED_G_Pin << 16;
 				}
 
 				__HAL_UART_FLUSH_DRREGISTER(&huart1);
@@ -327,17 +331,25 @@ int main(void)
 				continue;
 			}
 
-			if (awaitingForSending) {
+			if (ticked) {
+				ticked = 0;
+				HAL_Delay(1);
+				GPIOC->BSRR = LED_G_Pin;
+				ccmd->command_id = CMD_GETDATA;
+				if (sensor_id == SENSORS-1)
+					sensor_id = 0;
+				ccmd->sensor_id  = ++sensor_id;
+				{
+					HAL_StatusTypeDef r;
+					r = HAL_UART_Transmit(&huart1, (uint8_t *)ccmd, sizeof(*ccmd), 0xff);
+					if (r != HAL_OK)
+						error(4+r, 0);
+				}
+
+				timeoutCounter     = 0;
+				awaitingForReceive = 1;
 				continue;
 			}
-
-			ccmd->command_id = CMD_GETDATA;
-			ccmd->sensor_id  = sensor_id;
-			HAL_UART_Transmit_DMA(&huart1, (uint8_t *)ccmd, sizeof(*ccmd));
-
-			timeoutCounter     = 0;
-			awaitingForReceive = 1;
-			continue;
 		}
 	}
 

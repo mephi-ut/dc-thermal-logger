@@ -1,0 +1,1 @@
+SW4STM32/firmware Configuration/STM32F030F4Px_FLASH.ld

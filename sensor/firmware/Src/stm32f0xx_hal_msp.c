@@ -170,12 +170,10 @@ void HAL_UART_MspInit(UART_HandleTypeDef* huart)
     GPIO_InitStruct.Alternate = GPIO_AF1_USART1;
     HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-#define ALL_OK
-
   /* USER CODE BEGIN USART1_MspInit 1 */
 
 #ifndef ALL_OK
-#	error ALL_OK is not defined. Seems you regenerated the code, but didn't erase GPIO_PIN_2 from HAL_UART_MspInit() and didn't add line "#define ALL_OK".
+//#	error ALL_OK is not defined. Seems you regenerated the code, but didn't erase GPIO_PIN_2 from HAL_UART_MspInit() and didn't add line "#define ALL_OK".
 #endif
 #undef ALL_OK
 

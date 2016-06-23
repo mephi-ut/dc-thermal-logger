@@ -68,7 +68,6 @@ enum command_id {
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
-
 ADC_HandleTypeDef hadc;
 DMA_HandleTypeDef hdma_adc;
 
@@ -193,7 +192,7 @@ int main(void)
   /* USER CODE BEGIN 2 */
 
 	{
-		int r = HAL_ADC_Start_DMA(&hadc, (uint32_t *)&scmd.channel, sizeof(scmd.channel));
+		int r = HAL_ADC_Start_DMA(&hadc, (uint32_t *)&scmd.channel, sizeof(scmd.channel)/sizeof(*scmd.channel));
 
 		if (r != HAL_OK)
 			error(1+r, 0);
@@ -301,7 +300,7 @@ void MX_ADC_Init(void)
   hadc.Init.EOCSelection = EOC_SINGLE_CONV;
   hadc.Init.LowPowerAutoWait = DISABLE;
   hadc.Init.LowPowerAutoPowerOff = DISABLE;
-  hadc.Init.ContinuousConvMode = DISABLE;
+  hadc.Init.ContinuousConvMode = ENABLE;
   hadc.Init.DiscontinuousConvMode = DISABLE;
   hadc.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
   hadc.Init.DMAContinuousRequests = DISABLE;

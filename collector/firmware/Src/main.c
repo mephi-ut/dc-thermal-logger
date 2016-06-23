@@ -41,7 +41,7 @@
 
 #define PROC_PRESCALER	5
 
-#define SENSORS		16
+#define SENSORS		1
 #define MAX_CHANNELS	16
 
 #define NET_BUF_SIZE (1<<10)
@@ -194,7 +194,8 @@ uint16_t packetloop_icmp_udp(uint8_t *buf,uint16_t plen)
 #define RECV_TIMEOUT 1000
 
 static uint32_t ticked = 0;
-uint8_t net_buf[NET_BUF_SIZE + 1];
+uint8_t net_sendbuf[NET_BUF_SIZE + 1];
+uint8_t net_recvbuf[NET_BUF_SIZE + 1];
 
 void main_tick() {
 	ticked++;
@@ -208,7 +209,7 @@ void HAL_Delay(__IO uint32_t Delay)
 	tickstart = HAL_GetTick();
 	while((HAL_GetTick() - tickstart) < Delay)
 	{
-		packetloop_icmp_udp(net_buf, ES_enc28j60PacketReceive(NET_BUF_SIZE, net_buf));
+		packetloop_icmp_udp(net_recvbuf, ES_enc28j60PacketReceive(NET_BUF_SIZE, net_recvbuf));
 	}
 }
 
@@ -272,24 +273,26 @@ int main(void)
 		packetloop_icmp_udp(net_buf, ES_enc28j60PacketReceive(NET_BUF_SIZE, net_buf));
 	}*/
 
+	uint8_t awaitingForSending = 0;
+	dataitem_t *net_senddata = (dataitem_t *)(&net_sendbuf[NET_HEADERS_LENGTH]);
 
 	while (1)
 	{
-		uint8_t awaitingForSending = 0;
 		dataitem_t channels;
-		dataitem_t *net_data = (dataitem_t *)(&net_buf[NET_HEADERS_LENGTH]);
 
 		if (awaitingForSending) {
-			ES_send_udp_data2(net_buf, remote_mac, NET_HEADERS_LENGTH + channels*sizeof(*net_data), 26524, remote_ip, 36400);
+			GPIOB->BSRR = LED_NETSEND_Pin;
+			ES_send_udp_data2(net_sendbuf, remote_mac, (3+channels)*sizeof(*net_senddata), 26524, remote_ip, 36400);
+			GPIOB->BSRR = LED_NETSEND_Pin << 16;
 			awaitingForSending = 0;
 		}
-		packetloop_icmp_udp(net_buf, ES_enc28j60PacketReceive(NET_BUF_SIZE, net_buf));
+		packetloop_icmp_udp(net_recvbuf, ES_enc28j60PacketReceive(NET_BUF_SIZE, net_recvbuf));
 
 		{
 			static uint8_t  awaitingForReceive = 0;
 			static dataitem_t sensor_id = ~0;
 
-#ifdef UART_DMA
+#ifdef UART_DMA	// Doesn't work properly. Seems __HAL_UART_FLUSH_DRREGISTER() doesn't do what I expected.
 			static uint16_t timeoutCounter;
 			if (awaitingForReceive) {
 				timeoutCounter++;
@@ -318,11 +321,11 @@ int main(void)
 				}
 
 				if (itemsReceived-1 == channels) {
-					net_data[0] = sensor_id;
-					net_data[1] = channels;
+					net_senddata[0] = sensor_id;
+					net_senddata[1] = channels;
 					int i = 0;
 					while (i < channels) {
-						net_data[i+2] = scmd->channel[i];
+						net_senddata[i+2] = scmd->channel[i];
 						i++;
 					}
 					__HAL_UART_FLUSH_DRREGISTER(&huart1);
@@ -342,16 +345,16 @@ int main(void)
 				if (r == HAL_OK) {
 					channels    = scmd->channels;
 
-					net_data[0] = sensor_id;
-					net_data[1] = channels;
+					net_senddata[0] = sensor_id;
+					net_senddata[1] = channels;
 
-					r = HAL_UART_Receive(&huart1, (uint8_t *)(&((dataitem_t *)uart_recvbuf)[3]), sizeof(dataitem_t)*channels, 0x1f);
+					r = HAL_UART_Receive(&huart1, (uint8_t *)&scmd->channel, sizeof(dataitem_t)*channels, 0x1f);
 				}
 
 				if (r == HAL_OK) {
 					int i = 0;
 					while (i < channels) {
-						net_data[i+2] = scmd->channel[i];
+						net_senddata[i+2] = scmd->channel[i];
 						i++;
 					}
 					awaitingForSending = 1;
@@ -503,6 +506,7 @@ void MX_GPIO_Init(void)
   __GPIOC_CLK_ENABLE();
   __GPIOD_CLK_ENABLE();
   __GPIOA_CLK_ENABLE();
+  __GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pins : LED_R_Pin LED_G_Pin LED_B_Pin */
   GPIO_InitStruct.Pin = LED_R_Pin|LED_G_Pin|LED_B_Pin;
@@ -515,6 +519,12 @@ void MX_GPIO_Init(void)
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Speed = GPIO_SPEED_LOW;
   HAL_GPIO_Init(SPI1_CS_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : LED_NETSEND_Pin */
+  GPIO_InitStruct.Pin = LED_NETSEND_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Speed = GPIO_SPEED_LOW;
+  HAL_GPIO_Init(LED_NETSEND_GPIO_Port, &GPIO_InitStruct);
 
 }
 

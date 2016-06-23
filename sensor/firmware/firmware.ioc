@@ -1,7 +1,7 @@
 #MicroXplorer Configuration settings - do not modify
 ADC.ClockPrescaler=ADC_CLOCK_ASYNC
-ADC.ContinuousConvMode=DISABLE
-ADC.DMAContinuousRequests=DISABLE
+ADC.ContinuousConvMode=ENABLE
+ADC.DMAContinuousRequests=ENABLE
 ADC.DataAlign=ADC_DATAALIGN_RIGHT
 ADC.DiscontinuousConvMode=DISABLE
 ADC.EOCSelection=EOC_SINGLE_CONV

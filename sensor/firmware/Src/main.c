@@ -132,35 +132,7 @@ static inline void blink(int times, int delay) {
 
 	return;
 }
-static inline void unconfigure_tx ()
-{
-/*
-	GPIO_InitTypeDef GPIO_InitStruct;
-	GPIO_InitStruct.Pin		= GPIO_PIN_USART1_TX;
-	GPIO_InitStruct.Mode		= GPIO_MODE_INPUT;
-	GPIO_InitStruct.Pull		= GPIO_NOPULL;
-	GPIO_InitStruct.Speed		= GPIO_SPEED_HIGH;
-	GPIO_InitStruct.Alternate	= GPIO_AF1_USART1;
-	HAL_GPIO_Init(GPIO_PORT_USART1, &GPIO_InitStruct);
-*/
 
-	return;
-}
-
-static inline void configure_tx ()
-{
-/*
-	GPIO_InitTypeDef GPIO_InitStruct;
-	GPIO_InitStruct.Pin		= GPIO_PIN_USART1_TX;
-	GPIO_InitStruct.Mode		= GPIO_MODE_AF_PP;
-	GPIO_InitStruct.Pull		= GPIO_PULLUP;
-	GPIO_InitStruct.Speed		= GPIO_SPEED_HIGH;
-	GPIO_InitStruct.Alternate	= GPIO_AF1_USART1;
-	HAL_GPIO_Init(GPIO_PORT_USART1, &GPIO_InitStruct);
-*/
-
-	return;
-}
 /* USER CODE END PFP */
 
 /* USER CODE BEGIN 0 */
@@ -222,18 +194,13 @@ int main(void)
 				continue;
 		}
 
-		// Configuring TX pin
-		configure_tx();
-
 		// Sending command
 		{
 			int r = HAL_UART_Transmit(&huart1, (uint8_t *)&scmd, sizeof(scmd), ~0);
 			if (r != HAL_OK)
 				error(1+r, 0);
+			HAL_ADC_Start_DMA(&hadc, (uint32_t *)&scmd.channel, sizeof(scmd.channel)/sizeof(*scmd.channel));
 		}
-
-		// Openning (unconfiguring) TX pin to make able other slaves to talk
-		unconfigure_tx();
 	}
 
   /* USER CODE END 2 */

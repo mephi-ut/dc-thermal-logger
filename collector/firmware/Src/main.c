@@ -41,7 +41,7 @@
 
 #define PROC_PRESCALER	5
 
-#define SENSORS		1
+#define SENSORS		2
 #define MAX_CHANNELS	16
 
 #define NET_BUF_SIZE (1<<10)

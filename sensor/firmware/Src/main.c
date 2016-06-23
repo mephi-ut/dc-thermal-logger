@@ -192,6 +192,8 @@ int main(void)
   /* USER CODE BEGIN 2 */
 
 	{
+		HAL_ADC_Stop_DMA(&hadc);
+		HAL_ADC_Stop(&hadc);
 		int r = HAL_ADC_Start_DMA(&hadc, (uint32_t *)&scmd.channel, sizeof(scmd.channel)/sizeof(*scmd.channel));
 
 		if (r != HAL_OK)

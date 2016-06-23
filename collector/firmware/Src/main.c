@@ -39,6 +39,8 @@
 #include <string.h>
 #include "EtherShield.h"
 
+#define PROC_PRESCALER	5
+
 #define SENSORS		16
 #define MAX_CHANNELS	16
 
@@ -65,8 +67,8 @@ struct collectorcommand {
 typedef struct collectorcommand collectorcommand_t;
 
 enum command_id {
-	CMD_SETDATA,
-	CMD_GETDATA,
+	CMD_GETDATA = 1,
+	CMD_SETDATA = 2,
 };
 
 /* USER CODE END Includes */
@@ -191,11 +193,11 @@ uint16_t packetloop_icmp_udp(uint8_t *buf,uint16_t plen)
 #define NET_HEADERS_LENGTH (ETH_HEADER_LEN + IP_HEADER_LEN + UDP_HEADER_LEN)
 #define RECV_TIMEOUT 1000
 
-static uint8_t ticked = 0;
+static uint32_t ticked = 0;
 uint8_t net_buf[NET_BUF_SIZE + 1];
 
 void main_tick() {
-	ticked = 1;
+	ticked++;
 
 	return;
 }
@@ -238,11 +240,13 @@ int main(void)
 	sensorcommand_t    *scmd =    (sensorcommand_t *)uart_recvbuf;
 	collectorcommand_t *ccmd = (collectorcommand_t *)uart_sendbuf;
 
+#ifdef UART_DMA
 	{
 		HAL_StatusTypeDef r = HAL_UART_Receive_DMA(&huart1, uart_recvbuf, UART_BUF_SIZE);
 		if (r != HAL_OK)
 			error(4+r, 0);
 	}
+#endif
 
 	uint8_t   local_mac[] = {0x02, 0x03, 0x04, 0x05, 0x06, 0x08};
 	uint8_t  remote_mac[] = {0x00, 0x1b, 0x21, 0x39, 0x37, 0x26};
@@ -283,9 +287,10 @@ int main(void)
 
 		{
 			static uint8_t  awaitingForReceive = 0;
-			static uint16_t timeoutCounter;
 			static dataitem_t sensor_id = ~0;
 
+#ifdef UART_DMA
+			static uint16_t timeoutCounter;
 			if (awaitingForReceive) {
 				timeoutCounter++;
 				if (timeoutCounter > RECV_TIMEOUT) {
@@ -330,15 +335,51 @@ int main(void)
 
 				continue;
 			}
+#else
+			if (awaitingForReceive) {
+				HAL_StatusTypeDef r;
+				r = HAL_UART_Receive(&huart1, uart_recvbuf, sizeof(dataitem_t)*3, 0x1f);
+				if (r == HAL_OK) {
+					channels    = scmd->channels;
 
-			if (ticked) {
+					net_data[0] = sensor_id;
+					net_data[1] = channels;
+
+					r = HAL_UART_Receive(&huart1, (uint8_t *)(&((dataitem_t *)uart_recvbuf)[3]), sizeof(dataitem_t)*channels, 0x1f);
+				}
+
+				if (r == HAL_OK) {
+					int i = 0;
+					while (i < channels) {
+						net_data[i+2] = scmd->channel[i];
+						i++;
+					}
+					awaitingForSending = 1;
+				}
+
+				awaitingForReceive = 0;
+				GPIOC->BSRR = LED_G_Pin << 16;
+
+				if (r != HAL_OK) {
+					blink(1, 10);
+					continue;
+				}
+			}
+#endif
+
+			if (ticked >= PROC_PRESCALER) {
 				ticked = 0;
+
 				HAL_Delay(1);
-				GPIOC->BSRR = LED_G_Pin;
-				ccmd->command_id = CMD_GETDATA;
-				if (sensor_id == SENSORS-1)
+
+				sensor_id++;
+				if (sensor_id == SENSORS)
 					sensor_id = 0;
-				ccmd->sensor_id  = ++sensor_id;
+
+				GPIOC->BSRR = LED_G_Pin;
+
+				ccmd->command_id = CMD_GETDATA;
+				ccmd->sensor_id  = sensor_id;
 				{
 					HAL_StatusTypeDef r;
 					r = HAL_UART_Transmit(&huart1, (uint8_t *)ccmd, sizeof(*ccmd), 0xff);
@@ -346,7 +387,6 @@ int main(void)
 						error(4+r, 0);
 				}
 
-				timeoutCounter     = 0;
 				awaitingForReceive = 1;
 				continue;
 			}

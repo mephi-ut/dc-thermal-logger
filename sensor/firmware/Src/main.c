@@ -35,9 +35,40 @@
 
 /* USER CODE BEGIN Includes */
 
+#ifndef MY_ID
+#	error MY_ID is not defined. MY_ID can be defined via CFLAGS, for example "CFLAGS='-DMY_ID=0' make"
+#endif
+
+#define CHANNELS 8
+
+typedef uint16_t dataitem_t;
+
+struct sensorcommand {
+	dataitem_t      command_id;
+	dataitem_t       sensor_id;
+	dataitem_t      channels;
+	dataitem_t      channel[CHANNELS];
+};
+typedef struct sensorcommand sensorcommand_t;
+
+struct collectorcommand {
+	dataitem_t      command_id;
+	dataitem_t       sensor_id;
+};
+typedef struct collectorcommand collectorcommand_t;
+
+enum command_id {
+	CMD_GETDATA = 1,
+	CMD_SETDATA = 2,
+};
+
+#define GPIO_PIN_USART1_TX GPIO_PIN_2
+#define GPIO_PORT_USART1 GPIOA
+
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
+
 ADC_HandleTypeDef hadc;
 DMA_HandleTypeDef hdma_adc;
 
@@ -58,6 +89,79 @@ static void MX_USART1_UART_Init(void);
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
 
+
+void error (float error_num, char infinite) {
+	//printf("%u\r\n", error_num);
+	if (infinite)
+		while (1) {
+			int i = 0;
+			while (i++ < ((int)((float)(error_num) / 1) + 1) ) {
+				GPIOC->BSRR = LED_R_Pin;
+				HAL_Delay(1000 / error_num);
+				GPIOC->BSRR = LED_R_Pin << 16;
+				HAL_Delay(1000 / error_num);
+			}
+		};
+
+	GPIOC->BSRR = LED_R_Pin;
+	HAL_Delay(1000);
+	GPIOC->BSRR = LED_R_Pin << 16;
+	HAL_Delay(100);
+
+	int i=0;
+	while (i++ < error_num) {
+		GPIOC->BSRR = LED_R_Pin;
+		HAL_Delay(300);
+		GPIOC->BSRR = LED_R_Pin << 16;
+		HAL_Delay(200);
+	}
+
+	HAL_Delay(500);
+	NVIC_SystemReset();
+
+	return;
+}
+
+static inline void blink(int times, int delay) {
+	int i = 0;
+	while (i++ < times) {
+		GPIOC->BSRR = LED_R_Pin;
+		HAL_Delay(delay);
+		GPIOC->BSRR = LED_R_Pin << 16;
+		HAL_Delay(delay);
+	}
+
+	return;
+}
+static inline void unconfigure_tx ()
+{
+/*
+	GPIO_InitTypeDef GPIO_InitStruct;
+	GPIO_InitStruct.Pin		= GPIO_PIN_USART1_TX;
+	GPIO_InitStruct.Mode		= GPIO_MODE_INPUT;
+	GPIO_InitStruct.Pull		= GPIO_NOPULL;
+	GPIO_InitStruct.Speed		= GPIO_SPEED_HIGH;
+	GPIO_InitStruct.Alternate	= GPIO_AF1_USART1;
+	HAL_GPIO_Init(GPIO_PORT_USART1, &GPIO_InitStruct);
+*/
+
+	return;
+}
+
+static inline void configure_tx ()
+{
+/*
+	GPIO_InitTypeDef GPIO_InitStruct;
+	GPIO_InitStruct.Pin		= GPIO_PIN_USART1_TX;
+	GPIO_InitStruct.Mode		= GPIO_MODE_AF_PP;
+	GPIO_InitStruct.Pull		= GPIO_PULLUP;
+	GPIO_InitStruct.Speed		= GPIO_SPEED_HIGH;
+	GPIO_InitStruct.Alternate	= GPIO_AF1_USART1;
+	HAL_GPIO_Init(GPIO_PORT_USART1, &GPIO_InitStruct);
+*/
+
+	return;
+}
 /* USER CODE END PFP */
 
 /* USER CODE BEGIN 0 */
@@ -68,6 +172,7 @@ int main(void)
 {
 
   /* USER CODE BEGIN 1 */
+	sensorcommand_t scmd;
 
   /* USER CODE END 1 */
 
@@ -87,17 +192,57 @@ int main(void)
 
   /* USER CODE BEGIN 2 */
 
+	{
+		int r = HAL_ADC_Start_DMA(&hadc, (uint32_t *)&scmd.channel, sizeof(scmd.channel));
+
+		if (r != HAL_OK)
+			error(1+r, 0);
+	}
+
+	scmd.command_id = CMD_SETDATA;
+	scmd.sensor_id  = MY_ID;
+	scmd.channels   = CHANNELS;
+
+	while(1) {
+		// Receiving command
+		{
+			collectorcommand_t ccmd;
+
+			{
+				int r = HAL_UART_Receive(&huart1, (uint8_t *)&ccmd, sizeof(ccmd), ~0);
+				if (r != HAL_OK)
+					error(1+r, 0);
+			}
+
+			if (ccmd.command_id != CMD_GETDATA)
+				error(1, 0);
+
+			if (ccmd.sensor_id  != MY_ID)
+				continue;
+		}
+
+		// Configuring TX pin
+		configure_tx();
+
+		// Sending command
+		{
+			int r = HAL_UART_Transmit(&huart1, (uint8_t *)&scmd, sizeof(scmd), ~0);
+			if (r != HAL_OK)
+				error(1+r, 0);
+		}
+
+		// Openning (unconfiguring) TX pin to make able other slaves to talk
+		unconfigure_tx();
+	}
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  while (1)
-  {
   /* USER CODE END WHILE */
 
   /* USER CODE BEGIN 3 */
 
-  }
   /* USER CODE END 3 */
 
 }

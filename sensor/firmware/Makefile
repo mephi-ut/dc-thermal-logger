@@ -98,7 +98,7 @@ C_INCLUDES += -IDrivers/STM32F0xx_HAL_Driver/Inc/Legacy
 C_INCLUDES += -IInc
 # compile gcc flags
 ASFLAGS = -mthumb -mcpu=cortex-m0 $(AS_DEFS) $(AS_INCLUDES) $(OPT) -Wall -fdata-sections -ffunction-sections
-CFLAGS = -mthumb -mcpu=cortex-m0 $(C_DEFS) $(C_INCLUDES) $(OPT) -Wall -fdata-sections -ffunction-sections
+CFLAGS += -mthumb -mcpu=cortex-m0 $(C_DEFS) $(C_INCLUDES) $(OPT) -Wall -fdata-sections -ffunction-sections
 ifeq ($(DEBUG), 1)
 CFLAGS += -g -gdwarf-2
 endif

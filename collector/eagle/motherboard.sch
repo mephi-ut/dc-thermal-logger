@@ -317,87 +317,6 @@
 </deviceset>
 </devicesets>
 </library>
-<library name="ut-connectors">
-<packages>
-<package name="RJHSE-5481_(RJ45)">
-<hole x="-6.35" y="-1.27" drill="0.6"/>
-<hole x="6.35" y="-1.27" drill="0.6"/>
-<pad name="P5" x="-0.508" y="1.27" drill="0.254" shape="long" rot="R90"/>
-<pad name="P4" x="0.508" y="3.048" drill="0.254" shape="long" rot="R90"/>
-<pad name="P6" x="-1.524" y="3.048" drill="0.254" shape="long" rot="R90"/>
-<pad name="P3" x="1.524" y="1.27" drill="0.254" shape="long" rot="R90"/>
-<pad name="P7" x="-2.54" y="1.27" drill="0.254" shape="long" rot="R90"/>
-<pad name="P2" x="2.54" y="3.048" drill="0.254" shape="long" rot="R90"/>
-<pad name="P1" x="3.556" y="1.27" drill="0.254" shape="long" rot="R90"/>
-<pad name="P8" x="-3.556" y="3.048" drill="0.254" shape="long" rot="R90"/>
-<hole x="7.874" y="2.159" drill="0.6"/>
-<hole x="-7.874" y="2.159" drill="0.6"/>
-<pad name="LED_GREEN_-" x="6.858" y="7.874" drill="0.254" shape="long" rot="R90"/>
-<pad name="LED_YELLOW_+" x="-6.858" y="7.874" drill="0.254" shape="long" rot="R90"/>
-<pad name="LED_GREEN_+" x="4.572" y="7.874" drill="0.254" shape="long" rot="R90"/>
-<pad name="LED_YELLOW_-" x="-4.572" y="7.874" drill="0.254" shape="long" rot="R90"/>
-<rectangle x1="-7.874" y1="-5.08" x2="7.874" y2="8.89" layer="42"/>
-<text x="-6.35" y="5.08" size="1.27" layer="21">Y</text>
-<text x="5.08" y="5.08" size="1.27" layer="21">G</text>
-<text x="4.064" y="0" size="1.27" layer="21">1</text>
-<text x="-5.08" y="2.794" size="1.27" layer="21">8</text>
-<text x="-7.366" y="5.334" size="1.27" layer="21">+</text>
-<text x="4.064" y="5.334" size="1.27" layer="21">+</text>
-<text x="-4.826" y="5.334" size="1.27" layer="21">-</text>
-<text x="6.604" y="5.334" size="1.27" layer="21">-</text>
-<pad name="GND1" x="-7.874" y="2.159" drill="0.8" shape="square"/>
-<pad name="GND2" x="7.874" y="2.159" drill="0.8" shape="square"/>
-</package>
-</packages>
-<symbols>
-<symbol name="RJHSE-5481_(RJ45)">
-<pin name="P5" x="0" y="0" length="middle" rot="R90"/>
-<pin name="P4" x="2.54" y="2.54" length="middle" rot="R90"/>
-<pin name="P3" x="5.08" y="0" length="middle" rot="R90"/>
-<pin name="P2" x="7.62" y="2.54" length="middle" rot="R90"/>
-<pin name="P6" x="-2.54" y="2.54" length="middle" rot="R90"/>
-<pin name="P7" x="-5.08" y="0" length="middle" rot="R90"/>
-<pin name="P8" x="-7.62" y="2.54" length="middle" rot="R90"/>
-<pin name="P1" x="10.16" y="0" length="middle" rot="R90"/>
-<pin name="LED_GREEN_+" x="15.24" y="7.62" length="middle" direction="in" rot="R90"/>
-<pin name="LED_GREEN_-" x="17.78" y="7.62" length="middle" direction="in" rot="R90"/>
-<pin name="LED_YELLOW_-" x="-12.7" y="7.62" length="middle" direction="in" rot="R90"/>
-<pin name="LED_YELLOW_+" x="-15.24" y="7.62" length="middle" direction="in" rot="R90"/>
-<wire x1="-17.78" y1="10.16" x2="-17.78" y2="-5.08" width="0.254" layer="94"/>
-<wire x1="-17.78" y1="-5.08" x2="20.32" y2="-5.08" width="0.254" layer="94"/>
-<wire x1="20.32" y1="-5.08" x2="20.32" y2="10.16" width="0.254" layer="94"/>
-<wire x1="20.32" y1="10.16" x2="-17.78" y2="10.16" width="0.254" layer="94"/>
-</symbol>
-</symbols>
-<devicesets>
-<deviceset name="RJHSE-5481_(RJ45)">
-<gates>
-<gate name="G$1" symbol="RJHSE-5481_(RJ45)" x="0" y="0"/>
-</gates>
-<devices>
-<device name="" package="RJHSE-5481_(RJ45)">
-<connects>
-<connect gate="G$1" pin="LED_GREEN_+" pad="LED_GREEN_+"/>
-<connect gate="G$1" pin="LED_GREEN_-" pad="LED_GREEN_-"/>
-<connect gate="G$1" pin="LED_YELLOW_+" pad="LED_YELLOW_+"/>
-<connect gate="G$1" pin="LED_YELLOW_-" pad="LED_YELLOW_-"/>
-<connect gate="G$1" pin="P1" pad="P1"/>
-<connect gate="G$1" pin="P2" pad="P2"/>
-<connect gate="G$1" pin="P3" pad="P3"/>
-<connect gate="G$1" pin="P4" pad="P4"/>
-<connect gate="G$1" pin="P5" pad="P5"/>
-<connect gate="G$1" pin="P6" pad="P6"/>
-<connect gate="G$1" pin="P7" pad="P7"/>
-<connect gate="G$1" pin="P8" pad="P8"/>
-</connects>
-<technologies>
-<technology name=""/>
-</technologies>
-</device>
-</devices>
-</deviceset>
-</devicesets>
-</library>
 <library name="resistor">
 <description>&lt;b&gt;Resistors, Capacitors, Inductors&lt;/b&gt;&lt;p&gt;
 Based on the previous libraries:
@@ -3931,6 +3850,87 @@ Source: http://www.mouser.com/ds/2/392/products_18-2245.pdf</description>
 </deviceset>
 </devicesets>
 </library>
+<library name="ut-connectors">
+<packages>
+<package name="RJHSE-5481_(RJ45)">
+<hole x="-6.35" y="-2.54" drill="0.6"/>
+<hole x="6.35" y="-2.54" drill="0.6"/>
+<pad name="P5" x="-0.508" y="0" drill="0.254" shape="octagon" rot="R90"/>
+<pad name="P4" x="0.508" y="1.778" drill="0.254" shape="octagon" rot="R90"/>
+<pad name="P6" x="-1.524" y="1.778" drill="0.254" shape="octagon" rot="R90"/>
+<pad name="P3" x="1.524" y="0" drill="0.254" shape="octagon" rot="R90"/>
+<pad name="P7" x="-2.54" y="0" drill="0.254" shape="octagon" rot="R90"/>
+<pad name="P2" x="2.54" y="1.778" drill="0.254" shape="octagon" rot="R90"/>
+<pad name="P1" x="3.556" y="0" drill="0.254" shape="octagon" rot="R90"/>
+<pad name="P8" x="-3.556" y="1.778" drill="0.254" shape="octagon" rot="R90"/>
+<hole x="7.874" y="0.889" drill="0.6"/>
+<hole x="-7.874" y="0.889" drill="0.6"/>
+<pad name="LED_GREEN_-" x="6.858" y="6.604" drill="0.254" shape="long" rot="R90"/>
+<pad name="LED_YELLOW_+" x="-6.858" y="6.604" drill="0.254" shape="long" rot="R90"/>
+<pad name="LED_GREEN_+" x="4.572" y="6.604" drill="0.254" shape="long" rot="R90"/>
+<pad name="LED_YELLOW_-" x="-4.572" y="6.604" drill="0.254" shape="long" rot="R90"/>
+<rectangle x1="-7.874" y1="-6.35" x2="7.874" y2="7.62" layer="42"/>
+<text x="-6.35" y="3.81" size="1.27" layer="21">Y</text>
+<text x="5.08" y="3.81" size="1.27" layer="21">G</text>
+<text x="4.064" y="-1.27" size="1.27" layer="21">1</text>
+<text x="-5.08" y="1.524" size="1.27" layer="21">8</text>
+<text x="-7.366" y="4.064" size="1.27" layer="21">+</text>
+<text x="4.064" y="4.064" size="1.27" layer="21">+</text>
+<text x="-4.826" y="4.064" size="1.27" layer="21">-</text>
+<text x="6.604" y="4.064" size="1.27" layer="21">-</text>
+<pad name="GND1" x="-7.874" y="0.889" drill="0.8" shape="square"/>
+<pad name="GND2" x="7.874" y="0.889" drill="0.8" shape="square"/>
+</package>
+</packages>
+<symbols>
+<symbol name="RJHSE-5481_(RJ45)">
+<pin name="P5" x="0" y="0" length="middle" rot="R90"/>
+<pin name="P4" x="2.54" y="2.54" length="middle" rot="R90"/>
+<pin name="P3" x="5.08" y="0" length="middle" rot="R90"/>
+<pin name="P2" x="7.62" y="2.54" length="middle" rot="R90"/>
+<pin name="P6" x="-2.54" y="2.54" length="middle" rot="R90"/>
+<pin name="P7" x="-5.08" y="0" length="middle" rot="R90"/>
+<pin name="P8" x="-7.62" y="2.54" length="middle" rot="R90"/>
+<pin name="P1" x="10.16" y="0" length="middle" rot="R90"/>
+<pin name="LED_GREEN_+" x="15.24" y="7.62" length="middle" direction="in" rot="R90"/>
+<pin name="LED_GREEN_-" x="17.78" y="7.62" length="middle" direction="in" rot="R90"/>
+<pin name="LED_YELLOW_-" x="-12.7" y="7.62" length="middle" direction="in" rot="R90"/>
+<pin name="LED_YELLOW_+" x="-15.24" y="7.62" length="middle" direction="in" rot="R90"/>
+<wire x1="-17.78" y1="10.16" x2="-17.78" y2="-5.08" width="0.254" layer="94"/>
+<wire x1="-17.78" y1="-5.08" x2="20.32" y2="-5.08" width="0.254" layer="94"/>
+<wire x1="20.32" y1="-5.08" x2="20.32" y2="10.16" width="0.254" layer="94"/>
+<wire x1="20.32" y1="10.16" x2="-17.78" y2="10.16" width="0.254" layer="94"/>
+</symbol>
+</symbols>
+<devicesets>
+<deviceset name="RJHSE-5481_(RJ45)">
+<gates>
+<gate name="G$1" symbol="RJHSE-5481_(RJ45)" x="0" y="0"/>
+</gates>
+<devices>
+<device name="" package="RJHSE-5481_(RJ45)">
+<connects>
+<connect gate="G$1" pin="LED_GREEN_+" pad="LED_GREEN_+"/>
+<connect gate="G$1" pin="LED_GREEN_-" pad="LED_GREEN_-"/>
+<connect gate="G$1" pin="LED_YELLOW_+" pad="LED_YELLOW_+"/>
+<connect gate="G$1" pin="LED_YELLOW_-" pad="LED_YELLOW_-"/>
+<connect gate="G$1" pin="P1" pad="P1"/>
+<connect gate="G$1" pin="P2" pad="P2"/>
+<connect gate="G$1" pin="P3" pad="P3"/>
+<connect gate="G$1" pin="P4" pad="P4"/>
+<connect gate="G$1" pin="P5" pad="P5"/>
+<connect gate="G$1" pin="P6" pad="P6"/>
+<connect gate="G$1" pin="P7" pad="P7"/>
+<connect gate="G$1" pin="P8" pad="P8"/>
+</connects>
+<technologies>
+<technology name=""/>
+</technologies>
+</device>
+</devices>
+</deviceset>
+</devicesets>
+</library>
 </libraries>
 <attributes>
 </attributes>
@@ -3943,13 +3943,13 @@ Source: http://www.mouser.com/ds/2/392/products_18-2245.pdf</description>
 <parts>
 <part name="U$1" library="ut-boards" deviceset="HANRUN_HR911105A_15/10" device=""/>
 <part name="U$2" library="ut-boards" deviceset="STM32F103C8T6_BOARD_BLACK" device=""/>
-<part name="U$3" library="ut-connectors" deviceset="RJHSE-5481_(RJ45)" device=""/>
 <part name="R1" library="resistor" deviceset="R-EU_" device="R1206"/>
 <part name="R2" library="resistor" deviceset="R-EU_" device="R1206"/>
 <part name="RGB_LED" library="pinhead" deviceset="PINHD-2X2" device=""/>
 <part name="R3" library="resistor" deviceset="R-EU_" device="R1206"/>
 <part name="R4" library="resistor" deviceset="R-EU_" device="R1206"/>
 <part name="R5" library="resistor" deviceset="R-EU_" device="R1206"/>
+<part name="U$3" library="ut-connectors" deviceset="RJHSE-5481_(RJ45)" device=""/>
 </parts>
 <sheets>
 <sheet>
@@ -3962,13 +3962,13 @@ Source: http://www.mouser.com/ds/2/392/products_18-2245.pdf</description>
 <instances>
 <instance part="U$1" gate="G$1" x="40.64" y="60.96" rot="R270"/>
 <instance part="U$2" gate="G$1" x="104.14" y="43.18"/>
-<instance part="U$3" gate="G$1" x="101.6" y="-35.56"/>
 <instance part="R1" gate="G$1" x="121.92" y="-12.7"/>
 <instance part="R2" gate="G$1" x="121.92" y="-10.16"/>
 <instance part="RGB_LED" gate="A" x="63.5" y="15.24"/>
 <instance part="R3" gate="G$1" x="76.2" y="35.56"/>
 <instance part="R4" gate="G$1" x="76.2" y="33.02"/>
 <instance part="R5" gate="G$1" x="76.2" y="38.1"/>
+<instance part="U$3" gate="G$1" x="101.6" y="-35.56"/>
 </instances>
 <busses>
 </busses>
@@ -4014,8 +4014,6 @@ Source: http://www.mouser.com/ds/2/392/products_18-2245.pdf</description>
 <wire x1="129.54" y1="15.24" x2="129.54" y2="-20.32" width="0.1524" layer="91"/>
 <wire x1="119.38" y1="-20.32" x2="93.98" y2="-20.32" width="0.1524" layer="91"/>
 <wire x1="93.98" y1="-20.32" x2="88.9" y2="-20.32" width="0.1524" layer="91"/>
-<wire x1="88.9" y1="-20.32" x2="88.9" y2="-22.86" width="0.1524" layer="91"/>
-<wire x1="119.38" y1="-20.32" x2="119.38" y2="-22.86" width="0.1524" layer="91"/>
 <junction x="88.9" y="-20.32"/>
 <wire x1="129.54" y1="-20.32" x2="119.38" y2="-20.32" width="0.1524" layer="91"/>
 <junction x="119.38" y="-20.32"/>
@@ -4024,7 +4022,6 @@ Source: http://www.mouser.com/ds/2/392/products_18-2245.pdf</description>
 <junction x="116.84" y="15.24"/>
 <wire x1="93.98" y1="-33.02" x2="93.98" y2="-20.32" width="0.1524" layer="91"/>
 <junction x="93.98" y="-20.32"/>
-<pinref part="U$3" gate="G$1" pin="P8"/>
 <wire x1="88.9" y1="-20.32" x2="35.56" y2="-20.32" width="0.1524" layer="91"/>
 <wire x1="35.56" y1="-20.32" x2="35.56" y2="45.72" width="0.1524" layer="91"/>
 <pinref part="U$1" gate="G$1" pin="GND"/>
@@ -4035,6 +4032,11 @@ Source: http://www.mouser.com/ds/2/392/products_18-2245.pdf</description>
 <label x="76.2" y="-22.86" size="1.778" layer="95"/>
 <label x="124.46" y="-22.86" size="1.778" layer="95"/>
 <label x="101.6" y="-20.32" size="1.778" layer="95"/>
+<pinref part="U$3" gate="G$1" pin="P8"/>
+<pinref part="U$3" gate="G$1" pin="LED_YELLOW_-"/>
+<wire x1="88.9" y1="-20.32" x2="88.9" y2="-27.94" width="0.1524" layer="91"/>
+<pinref part="U$3" gate="G$1" pin="LED_GREEN_-"/>
+<wire x1="119.38" y1="-20.32" x2="119.38" y2="-27.94" width="0.1524" layer="91"/>
 </segment>
 </net>
 <net name="PB9" class="0">
@@ -4054,7 +4056,6 @@ Source: http://www.mouser.com/ds/2/392/products_18-2245.pdf</description>
 <junction x="116.84" y="27.94"/>
 <wire x1="116.84" y1="27.94" x2="96.52" y2="27.94" width="0.1524" layer="91"/>
 <wire x1="96.52" y1="27.94" x2="96.52" y2="-2.54" width="0.1524" layer="91"/>
-<pinref part="U$3" gate="G$1" pin="P7"/>
 <wire x1="96.52" y1="-2.54" x2="96.52" y2="-35.56" width="0.1524" layer="91"/>
 <wire x1="96.52" y1="-2.54" x2="38.1" y2="-2.54" width="0.1524" layer="91"/>
 <wire x1="38.1" y1="-2.54" x2="38.1" y2="43.18" width="0.1524" layer="91"/>
@@ -4066,6 +4067,7 @@ Source: http://www.mouser.com/ds/2/392/products_18-2245.pdf</description>
 <label x="38.1" y="33.02" size="1.778" layer="95"/>
 <label x="76.2" y="-5.08" size="1.778" layer="95"/>
 <label x="96.52" y="-15.24" size="1.778" layer="95"/>
+<pinref part="U$3" gate="G$1" pin="P7"/>
 </segment>
 </net>
 <net name="PB8" class="0">
@@ -4080,19 +4082,18 @@ Source: http://www.mouser.com/ds/2/392/products_18-2245.pdf</description>
 </net>
 <net name="N$9" class="0">
 <segment>
-<wire x1="116.84" y1="-12.7" x2="116.84" y2="-22.86" width="0.1524" layer="91"/>
-<pinref part="U$3" gate="G$1" pin="LED_GREEN_+"/>
+<wire x1="116.84" y1="-12.7" x2="116.84" y2="-27.94" width="0.1524" layer="91"/>
 <pinref part="R1" gate="G$1" pin="1"/>
-<wire x1="116.84" y1="-27.94" x2="116.84" y2="-22.86" width="0.1524" layer="91"/>
+<pinref part="U$3" gate="G$1" pin="LED_GREEN_+"/>
 </segment>
 </net>
 <net name="PB9R" class="0">
 <segment>
 <wire x1="86.36" y1="-10.16" x2="86.36" y2="-27.94" width="0.1524" layer="91"/>
-<pinref part="U$3" gate="G$1" pin="LED_YELLOW_+"/>
 <pinref part="R2" gate="G$1" pin="1"/>
 <wire x1="116.84" y1="-10.16" x2="86.36" y2="-10.16" width="0.1524" layer="91"/>
 <label x="101.6" y="-10.16" size="1.778" layer="95"/>
+<pinref part="U$3" gate="G$1" pin="LED_YELLOW_+"/>
 </segment>
 </net>
 <net name="PA9" class="0">
@@ -4102,8 +4103,8 @@ Source: http://www.mouser.com/ds/2/392/products_18-2245.pdf</description>
 <wire x1="91.44" y1="58.42" x2="111.76" y2="58.42" width="0.1524" layer="91"/>
 <junction x="91.44" y="58.42"/>
 <wire x1="111.76" y1="58.42" x2="111.76" y2="-35.56" width="0.1524" layer="91"/>
-<pinref part="U$3" gate="G$1" pin="P1"/>
 <label x="111.76" y="-2.54" size="1.778" layer="95"/>
+<pinref part="U$3" gate="G$1" pin="P1"/>
 </segment>
 </net>
 <net name="PA10" class="0">
@@ -4113,8 +4114,8 @@ Source: http://www.mouser.com/ds/2/392/products_18-2245.pdf</description>
 <wire x1="91.44" y1="55.88" x2="109.22" y2="55.88" width="0.1524" layer="91"/>
 <junction x="91.44" y="55.88"/>
 <wire x1="109.22" y1="55.88" x2="109.22" y2="-33.02" width="0.1524" layer="91"/>
-<pinref part="U$3" gate="G$1" pin="P2"/>
 <label x="104.14" y="-2.54" size="1.778" layer="95"/>
+<pinref part="U$3" gate="G$1" pin="P2"/>
 </segment>
 </net>
 <net name="PC13" class="0">

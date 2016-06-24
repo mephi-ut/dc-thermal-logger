@@ -38,12 +38,10 @@
 
 /* Private define ------------------------------------------------------------*/
 
-#define LED_R_Pin GPIO_PIN_0
-#define LED_R_GPIO_Port GPIOF
-#define LED_G_Pin GPIO_PIN_1
-#define LED_G_GPIO_Port GPIOF
-#define LED_B_Pin GPIO_PIN_9
-#define LED_B_GPIO_Port GPIOA
+#define LED_UART_TX_Pin GPIO_PIN_0
+#define LED_UART_TX_GPIO_Port GPIOF
+#define LED_STATUS_Pin GPIO_PIN_1
+#define LED_STATUS_GPIO_Port GPIOF
 /* USER CODE BEGIN Private defines */
 
 /* USER CODE END Private defines */

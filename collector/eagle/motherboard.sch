@@ -3958,6 +3958,10 @@ Source: http://www.mouser.com/ds/2/392/products_18-2245.pdf</description>
 <text x="66.04" y="17.78" size="1.778" layer="97">G</text>
 <text x="60.96" y="15.24" size="1.778" layer="97">B</text>
 <text x="65.532" y="13.716" size="1.778" layer="97">+</text>
+<wire x1="93.98" y1="-33.02" x2="93.98" y2="-45.72" width="0.1524" layer="97"/>
+<wire x1="96.52" y1="-53.34" x2="96.52" y2="-35.56" width="0.1524" layer="97"/>
+<wire x1="109.22" y1="-33.02" x2="109.22" y2="-53.34" width="0.1524" layer="97"/>
+<wire x1="111.76" y1="-35.56" x2="111.76" y2="-45.72" width="0.1524" layer="97"/>
 </plain>
 <instances>
 <instance part="U$1" gate="G$1" x="40.64" y="60.96" rot="R270"/>
@@ -4034,6 +4038,7 @@ Source: http://www.mouser.com/ds/2/392/products_18-2245.pdf</description>
 <wire x1="88.9" y1="-20.32" x2="88.9" y2="-27.94" width="0.1524" layer="91"/>
 <pinref part="U$3" gate="G$1" pin="LED_GREEN_-"/>
 <wire x1="119.38" y1="-20.32" x2="119.38" y2="-27.94" width="0.1524" layer="91"/>
+<label x="90.17" y="-48.514" size="1.778" layer="95"/>
 </segment>
 </net>
 <net name="PB9" class="0">
@@ -4069,6 +4074,7 @@ Source: http://www.mouser.com/ds/2/392/products_18-2245.pdf</description>
 <pinref part="RGB_LED" gate="A" pin="4"/>
 <wire x1="96.52" y1="15.24" x2="66.04" y2="15.24" width="0.1524" layer="91"/>
 <junction x="96.52" y="15.24"/>
+<label x="93.98" y="-55.88" size="1.778" layer="95"/>
 </segment>
 </net>
 <net name="PB8" class="0">
@@ -4097,26 +4103,26 @@ Source: http://www.mouser.com/ds/2/392/products_18-2245.pdf</description>
 <pinref part="U$3" gate="G$1" pin="LED_YELLOW_+"/>
 </segment>
 </net>
-<net name="PA9" class="0">
+<net name="PA9_(UART1_TX)" class="0">
 <segment>
 <pinref part="U$2" gate="G$1" pin="PA9"/>
 <wire x1="86.36" y1="58.42" x2="91.44" y2="58.42" width="0.1524" layer="91"/>
 <wire x1="91.44" y1="58.42" x2="111.76" y2="58.42" width="0.1524" layer="91"/>
 <junction x="91.44" y="58.42"/>
 <wire x1="111.76" y1="58.42" x2="111.76" y2="-35.56" width="0.1524" layer="91"/>
-<label x="111.76" y="-2.54" size="1.778" layer="95"/>
 <pinref part="U$3" gate="G$1" pin="P1"/>
+<label x="111.76" y="-48.26" size="1.778" layer="95"/>
 </segment>
 </net>
-<net name="PA10" class="0">
+<net name="PA10_(UART1_RX)" class="0">
 <segment>
 <pinref part="U$2" gate="G$1" pin="PA10"/>
 <wire x1="86.36" y1="55.88" x2="91.44" y2="55.88" width="0.1524" layer="91"/>
 <wire x1="91.44" y1="55.88" x2="109.22" y2="55.88" width="0.1524" layer="91"/>
 <junction x="91.44" y="55.88"/>
 <wire x1="109.22" y1="55.88" x2="109.22" y2="-33.02" width="0.1524" layer="91"/>
-<label x="104.14" y="-2.54" size="1.778" layer="95"/>
 <pinref part="U$3" gate="G$1" pin="P2"/>
+<label x="109.22" y="-55.88" size="1.778" layer="95"/>
 </segment>
 </net>
 <net name="PC13" class="0">

@@ -95,23 +95,23 @@ void error (float error_num, char infinite) {
 		while (1) {
 			int i = 0;
 			while (i++ < ((int)((float)(error_num) / 1) + 1) ) {
-				GPIOC->BSRR = LED_R_Pin;
+				GPIOC->BSRR = LED_STATUS_Pin;
 				HAL_Delay(1000 / error_num);
-				GPIOC->BSRR = LED_R_Pin << 16;
+				GPIOC->BSRR = LED_STATUS_Pin << 16;
 				HAL_Delay(1000 / error_num);
 			}
 		};
 
-	GPIOC->BSRR = LED_R_Pin;
+	GPIOC->BSRR = LED_STATUS_Pin;
 	HAL_Delay(1000);
-	GPIOC->BSRR = LED_R_Pin << 16;
+	GPIOC->BSRR = LED_STATUS_Pin << 16;
 	HAL_Delay(100);
 
 	int i=0;
 	while (i++ < error_num) {
-		GPIOC->BSRR = LED_R_Pin;
+		GPIOC->BSRR = LED_STATUS_Pin;
 		HAL_Delay(300);
-		GPIOC->BSRR = LED_R_Pin << 16;
+		GPIOC->BSRR = LED_STATUS_Pin << 16;
 		HAL_Delay(200);
 	}
 
@@ -124,9 +124,9 @@ void error (float error_num, char infinite) {
 static inline void blink(int times, int delay) {
 	int i = 0;
 	while (i++ < times) {
-		GPIOC->BSRR = LED_R_Pin;
+		GPIOC->BSRR = LED_STATUS_Pin;
 		HAL_Delay(delay);
-		GPIOC->BSRR = LED_R_Pin << 16;
+		GPIOC->BSRR = LED_STATUS_Pin << 16;
 		HAL_Delay(delay);
 	}
 
@@ -176,6 +176,8 @@ int main(void)
 	scmd.sensor_id  = MY_ID;
 	scmd.channels   = CHANNELS;
 
+	LED_STATUS_GPIO_Port->BSRR = LED_STATUS_Pin;
+
 	while(1) {
 		// Receiving command
 		{
@@ -196,9 +198,14 @@ int main(void)
 
 		// Sending command
 		{
+			LED_UART_TX_GPIO_Port->BSRR = LED_UART_TX_Pin;
+
 			int r = HAL_UART_Transmit(&huart1, (uint8_t *)&scmd, sizeof(scmd), ~0);
 			if (r != HAL_OK)
 				error(1+r, 0);
+
+			LED_UART_TX_GPIO_Port->BSRR = LED_UART_TX_Pin << 16;
+
 			HAL_ADC_Start_DMA(&hadc, (uint32_t *)&scmd.channel, sizeof(scmd.channel)/sizeof(*scmd.channel));
 		}
 	}
@@ -272,7 +279,7 @@ void MX_ADC_Init(void)
   hadc.Init.ContinuousConvMode = ENABLE;
   hadc.Init.DiscontinuousConvMode = DISABLE;
   hadc.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
-  hadc.Init.DMAContinuousRequests = DISABLE;
+  hadc.Init.DMAContinuousRequests = ENABLE;
   hadc.Init.Overrun = OVR_DATA_PRESERVED;
   HAL_ADC_Init(&hadc);
 
@@ -369,19 +376,12 @@ void MX_GPIO_Init(void)
   __GPIOA_CLK_ENABLE();
   __GPIOB_CLK_ENABLE();
 
-  /*Configure GPIO pins : LED_R_Pin LED_G_Pin */
-  GPIO_InitStruct.Pin = LED_R_Pin|LED_G_Pin;
+  /*Configure GPIO pins : LED_UART_TX_Pin LED_STATUS_Pin */
+  GPIO_InitStruct.Pin = LED_UART_TX_Pin|LED_STATUS_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_LOW;
   HAL_GPIO_Init(GPIOF, &GPIO_InitStruct);
-
-  /*Configure GPIO pin : LED_B_Pin */
-  GPIO_InitStruct.Pin = LED_B_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_LOW;
-  HAL_GPIO_Init(LED_B_GPIO_Port, &GPIO_InitStruct);
 
 }
 

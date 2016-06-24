@@ -3957,7 +3957,7 @@ Source: http://www.mouser.com/ds/2/392/products_18-2245.pdf</description>
 <text x="60.96" y="17.78" size="1.778" layer="97">R</text>
 <text x="66.04" y="17.78" size="1.778" layer="97">G</text>
 <text x="60.96" y="15.24" size="1.778" layer="97">B</text>
-<text x="66.04" y="15.24" size="1.778" layer="97">GND</text>
+<text x="65.532" y="13.716" size="1.778" layer="97">+</text>
 </plain>
 <instances>
 <instance part="U$1" gate="G$1" x="40.64" y="60.96" rot="R270"/>
@@ -4017,9 +4017,6 @@ Source: http://www.mouser.com/ds/2/392/products_18-2245.pdf</description>
 <junction x="88.9" y="-20.32"/>
 <wire x1="129.54" y1="-20.32" x2="119.38" y2="-20.32" width="0.1524" layer="91"/>
 <junction x="119.38" y="-20.32"/>
-<pinref part="RGB_LED" gate="A" pin="4"/>
-<wire x1="66.04" y1="15.24" x2="116.84" y2="15.24" width="0.1524" layer="91"/>
-<junction x="116.84" y="15.24"/>
 <wire x1="93.98" y1="-33.02" x2="93.98" y2="-20.32" width="0.1524" layer="91"/>
 <junction x="93.98" y="-20.32"/>
 <wire x1="88.9" y1="-20.32" x2="35.56" y2="-20.32" width="0.1524" layer="91"/>
@@ -4055,7 +4052,8 @@ Source: http://www.mouser.com/ds/2/392/products_18-2245.pdf</description>
 <wire x1="121.92" y1="27.94" x2="116.84" y2="27.94" width="0.1524" layer="91"/>
 <junction x="116.84" y="27.94"/>
 <wire x1="116.84" y1="27.94" x2="96.52" y2="27.94" width="0.1524" layer="91"/>
-<wire x1="96.52" y1="27.94" x2="96.52" y2="-2.54" width="0.1524" layer="91"/>
+<wire x1="96.52" y1="27.94" x2="96.52" y2="15.24" width="0.1524" layer="91"/>
+<wire x1="96.52" y1="15.24" x2="96.52" y2="-2.54" width="0.1524" layer="91"/>
 <wire x1="96.52" y1="-2.54" x2="96.52" y2="-35.56" width="0.1524" layer="91"/>
 <wire x1="96.52" y1="-2.54" x2="38.1" y2="-2.54" width="0.1524" layer="91"/>
 <wire x1="38.1" y1="-2.54" x2="38.1" y2="43.18" width="0.1524" layer="91"/>
@@ -4068,6 +4066,9 @@ Source: http://www.mouser.com/ds/2/392/products_18-2245.pdf</description>
 <label x="76.2" y="-5.08" size="1.778" layer="95"/>
 <label x="96.52" y="-15.24" size="1.778" layer="95"/>
 <pinref part="U$3" gate="G$1" pin="P7"/>
+<pinref part="RGB_LED" gate="A" pin="4"/>
+<wire x1="96.52" y1="15.24" x2="66.04" y2="15.24" width="0.1524" layer="91"/>
+<junction x="96.52" y="15.24"/>
 </segment>
 </net>
 <net name="PB8" class="0">
@@ -4120,12 +4121,12 @@ Source: http://www.mouser.com/ds/2/392/products_18-2245.pdf</description>
 </net>
 <net name="PC13" class="0">
 <segment>
-<pinref part="RGB_LED" gate="A" pin="1"/>
-<wire x1="55.88" y1="38.1" x2="55.88" y2="17.78" width="0.1524" layer="91"/>
-<wire x1="55.88" y1="17.78" x2="58.42" y2="17.78" width="0.1524" layer="91"/>
 <pinref part="R5" gate="G$1" pin="1"/>
-<wire x1="71.12" y1="38.1" x2="55.88" y2="38.1" width="0.1524" layer="91"/>
-<label x="55.88" y="25.4" size="1.778" layer="95"/>
+<wire x1="71.12" y1="38.1" x2="53.34" y2="38.1" width="0.1524" layer="91"/>
+<wire x1="53.34" y1="38.1" x2="53.34" y2="15.24" width="0.1524" layer="91"/>
+<pinref part="RGB_LED" gate="A" pin="3"/>
+<wire x1="53.34" y1="15.24" x2="58.42" y2="15.24" width="0.1524" layer="91"/>
+<label x="55.88" y="35.56" size="1.778" layer="95"/>
 </segment>
 </net>
 <net name="PC14" class="0">
@@ -4136,16 +4137,6 @@ Source: http://www.mouser.com/ds/2/392/products_18-2245.pdf</description>
 <wire x1="71.12" y1="35.56" x2="68.58" y2="35.56" width="0.1524" layer="91"/>
 <wire x1="68.58" y1="35.56" x2="68.58" y2="17.78" width="0.1524" layer="91"/>
 <label x="68.58" y="22.86" size="1.778" layer="95"/>
-</segment>
-</net>
-<net name="PC15" class="0">
-<segment>
-<pinref part="RGB_LED" gate="A" pin="3"/>
-<wire x1="50.8" y1="33.02" x2="50.8" y2="15.24" width="0.1524" layer="91"/>
-<wire x1="50.8" y1="15.24" x2="58.42" y2="15.24" width="0.1524" layer="91"/>
-<pinref part="R4" gate="G$1" pin="1"/>
-<wire x1="71.12" y1="33.02" x2="50.8" y2="33.02" width="0.1524" layer="91"/>
-<label x="43.18" y="17.78" size="1.778" layer="95"/>
 </segment>
 </net>
 <net name="N$16" class="0">
@@ -4167,6 +4158,16 @@ Source: http://www.mouser.com/ds/2/392/products_18-2245.pdf</description>
 <pinref part="R5" gate="G$1" pin="2"/>
 <pinref part="U$2" gate="G$1" pin="PC13"/>
 <wire x1="81.28" y1="38.1" x2="91.44" y2="38.1" width="0.1524" layer="91"/>
+</segment>
+</net>
+<net name="PC15" class="0">
+<segment>
+<pinref part="R4" gate="G$1" pin="1"/>
+<wire x1="71.12" y1="33.02" x2="55.88" y2="33.02" width="0.1524" layer="91"/>
+<wire x1="55.88" y1="33.02" x2="55.88" y2="17.78" width="0.1524" layer="91"/>
+<pinref part="RGB_LED" gate="A" pin="1"/>
+<wire x1="55.88" y1="17.78" x2="58.42" y2="17.78" width="0.1524" layer="91"/>
+<label x="58.42" y="30.48" size="1.778" layer="95"/>
 </segment>
 </net>
 </nets>

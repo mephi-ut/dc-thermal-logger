@@ -1,8 +1,9 @@
 [package]
-name = "dc-logger-parser"
+name = "dc_logger_parser"
 version = "0.1.0"
 authors = ["Dmitry Yu Okunev <dyokunev@ut.mephi.ru>"]
 
 [dependencies]
-sqlite = "0.22.0"
 time = "0.1.35"
+dotenv = "0.8.0"
+postgres = "0.11.9"

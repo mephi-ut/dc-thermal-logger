@@ -37,7 +37,7 @@ fn main() {
 			continue;
 		}
 
-		for channel_id in 0..(msg.channel_count as i16) {
+		for channel_id in 0..msg.channel_count {
 			let value = msg.channels[channel_id as usize];
 			pgsql_conn.execute("INSERT INTO log_records (sensor_id, channel_id, value) VALUES ($1, $2, $3)", &[&msg.sensor_id, &channel_id, &value]).unwrap();
 		}

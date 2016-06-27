@@ -1,0 +1,77 @@
+body {
+	background-color: #000;
+	font-size:	16px;
+	color:		#eee;
+}
+
+* {
+	transition:	background 0.15s ease-in-out 0s, color 0.15s ease-in-out 0s;
+}
+
+header {
+	position:	absolute;
+	width:		100%;
+	height:		120px;
+	top:		0;
+	bottom:		0;
+	padding:	0;
+	margin:		0;
+	font-size:	32px;
+}
+
+header, header a {
+	color:		#ccc;
+}
+header a:hover {
+	color:		#fff;
+	text-decoration: none;
+}
+
+#logo {
+	padding:	10px;
+	height:		90px;
+	width:		90px;
+	background:	#000;
+}
+#logo:hover {
+	background:	#fff;
+}
+
+main {
+	position:	absolute;
+	top:		120px;
+	bottom:		0;
+	padding:	0;
+	margin:		0;
+}
+
+#map2d {
+	margin:		0 20px 0 20px;
+}
+
+#map2d td {
+	height:		90px;
+	width:		90px;
+	border:		1px dotted #444;
+}
+
+.ClosedFloor {
+	background-image: url(/public/img/graph/textures/dc/floor_closed.png);
+}
+
+.OpenedFloor {
+	background-image: url(/public/img/graph/textures/dc/floor_opened.png);
+}
+
+.AirConditioning {
+	background-image: url(/public/img/graph/textures/dc/conditioning.png);
+}
+
+.ServerRack {
+	background-image: url(/public/img/graph/textures/dc/server_rack.png);
+}
+
+.ClosedFloor, .OpenedFloor, .AirConditioning, .ServerRack {
+	background-size: cover;
+}
+

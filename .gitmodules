@@ -1,3 +1,6 @@
 [submodule "collector/firmware/Drivers/enc28j60"]
 	path = collector/firmware/Drivers/enc28j60
 	url = https://github.com/xaionaro/stm32-enc28j60
+[submodule "server/httpsite/public/img/graph"]
+	path = server/httpsite/public/img/graph
+	url = https://devel.mephi.ru/dyokunev/graph

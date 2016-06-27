@@ -11,7 +11,7 @@ import (
 
 var DB *reform.DB;
 
-func InitDB() {
+func initDB() {
 	simpleDB, err := sql.Open("postgres", revel.Config.StringDefault("app.db_url", "postgres://localhost/sensors"))
 	if (err != nil) {
 		revel.ERROR.Printf("Cannot connect to DB: %s", err.Error())
@@ -40,7 +40,7 @@ func init() {
 
 	// register startup functions with OnAppStart
 	// ( order dependent )
-	revel.OnAppStart(InitDB)
+	revel.OnAppStart(initDB)
 	// revel.OnAppStart(FillCache)
 }
 

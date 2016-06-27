@@ -39,7 +39,7 @@ fn main() {
 
 		for channel_id in 0..msg.channel_count {
 			let value = msg.channels[channel_id as usize];
-			pgsql_conn.execute("INSERT INTO log_records (sensor_id, channel_id, value) VALUES ($1, $2, $3)", &[&msg.sensor_id, &channel_id, &value]).unwrap();
+			pgsql_conn.execute("INSERT INTO raw_records (sensor_id, channel_id, raw_value) VALUES ($1, $2, $3)", &[&msg.sensor_id, &channel_id, &value]).unwrap();
 		}
 	}
 }

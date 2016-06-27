@@ -13,7 +13,7 @@ type Dashboard struct {
 func (c Dashboard) Page() revel.Result {
 	var err error
 
-	c.RenderArgs["rawRecords"],err = models.RawRecord.Select(app.DB, "")
+	c.RenderArgs["rawRecords"],err = models.RawRecord.Select(app.DB)
 	if err != nil {
 		revel.ERROR.Printf("%s", err.Error())
 	}

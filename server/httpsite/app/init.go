@@ -1,24 +1,79 @@
 package app
 
 import (
+	  "time"
 	  "os"
 	  "github.com/revel/revel"
 	  "database/sql"
 	  "gopkg.in/reform.v1"
 	  "gopkg.in/reform.v1/dialects/postgresql"
+	  "devel.mephi.ru/dyokunev/dc-thermal-logger/server/httpsite/app/models"
 	_ "github.com/lib/pq"
 )
 
-var DB *reform.DB;
+var DB *reform.DB
 
 func initDB() {
 	simpleDB, err := sql.Open("postgres", revel.Config.StringDefault("app.db_url", "postgres://localhost/sensors"))
 	if (err != nil) {
 		revel.ERROR.Printf("Cannot connect to DB: %s", err.Error())
-		os.Exit(-1);
+		os.Exit(-1)
 	}
 
 	DB = reform.NewDB(simpleDB, postgresql.Dialect, reform.NewPrintfLogger(revel.TRACE.Printf))
+}
+
+func initRecordsConverted() {
+
+	go func() {
+		for ;; {
+			revel.TRACE.Printf("Running converter iteration…")
+			rawRecords,err := models.RawRecord.Select(DB)
+			if (err != nil) {
+				revel.ERROR.Printf("Converter error: %v", err.Error())
+				continue
+			}
+
+			for _,rawRecord := range rawRecords {
+				var err error
+
+				historyRecords := rawRecord.ToHistoryRecords()
+				for _,historyRecord := range historyRecords {
+					historyRecordFilter := historyRecord
+					historyRecordFilter.RawValue       = 0
+					historyRecordFilter.ConvertedValue = 0
+					historyRecordOld,er := models.HistoryRecord.First(DB, historyRecordFilter)
+					err = er
+
+					if err != nil {
+						if err == reform.ErrNoRows {
+							revel.TRACE.Printf("historyRecord.Insert(DB)")
+							historyRecord.Counter = 1
+							err = historyRecord.Insert(DB)
+						}
+					} else {
+						historyRecordOld.Merge(historyRecord)
+						revel.TRACE.Printf("historyRecordOld.Update(DB)")
+						err = historyRecordOld.Update(DB)
+					}
+
+					if err != nil {
+						break
+					}
+				}
+				if err != nil {
+					revel.ERROR.Printf("Converter error: %v", err.Error())
+					continue
+				}
+				err = rawRecord.Delete(DB)
+				if err != nil {
+					revel.ERROR.Printf("Converter error: %v", err.Error())
+				}
+			}
+
+			time.Sleep(time.Second)
+		}
+	}()
 }
 
 func init() {
@@ -41,7 +96,7 @@ func init() {
 	// register startup functions with OnAppStart
 	// ( order dependent )
 	revel.OnAppStart(initDB)
-	// revel.OnAppStart(FillCache)
+	revel.OnAppStart(initRecordsConverted)
 }
 
 // TODO turn this into revel.HeaderFilter

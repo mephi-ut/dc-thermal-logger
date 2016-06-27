@@ -11,106 +11,112 @@ import (
 	"gopkg.in/reform.v1/parse"
 )
 
-type rawRecordTableType struct {
+type historyRecordTableType struct {
 	s parse.StructInfo
 	z []interface{}
 }
 
-type rawRecordScope struct {
-	rawRecord
+type historyRecordScope struct {
+	historyRecord
 	order []string
 }
 
-type RawRecordFilter rawRecord
+type HistoryRecordFilter historyRecord
 
 // Schema returns a schema name in SQL database ("").
-func (v *rawRecordTableType) Schema() string {
+func (v *historyRecordTableType) Schema() string {
 	return v.s.SQLSchema
 }
 
-// Name returns a view or table name in SQL database ("raw_records").
-func (v *rawRecordTableType) Name() string {
+// Name returns a view or table name in SQL database ("history_records").
+func (v *historyRecordTableType) Name() string {
 	return v.s.SQLName
 }
 
 // Columns returns a new slice of column names for that view or table in SQL database.
-func (v *rawRecordTableType) Columns() []string {
-	return []string{"id", "date", "raw_sensor_id", "raw_channel_id", "raw_value"}
+func (v *historyRecordTableType) Columns() []string {
+	return []string{"id", "date", "aggregation_period", "sensor_id", "raw_value", "converted_value", "counter"}
 }
 
 // NewStruct makes a new struct for that view or table.
-func (v *rawRecordTableType) NewStruct() reform.Struct {
-	return new(rawRecord)
+func (v *historyRecordTableType) NewStruct() reform.Struct {
+	return new(historyRecord)
 }
 
 // NewRecord makes a new record for that table.
-func (v *rawRecordTableType) NewRecord() reform.Record {
-	return new(rawRecord)
+func (v *historyRecordTableType) NewRecord() reform.Record {
+	return new(historyRecord)
 }
 
-func (v *rawRecordTableType) NewScope() *rawRecordScope {
-	return &rawRecordScope{}
+func (v *historyRecordTableType) NewScope() *historyRecordScope {
+	return &historyRecordScope{}
 }
 
 // PKColumnIndex returns an index of primary key column for that table in SQL database.
-func (v *rawRecordTableType) PKColumnIndex() uint {
+func (v *historyRecordTableType) PKColumnIndex() uint {
 	return uint(v.s.PKFieldIndex)
 }
 
-// rawRecordTable represents raw_records view or table in SQL database.
-var rawRecordTable = &rawRecordTableType{
-	s: parse.StructInfo{Type: "rawRecord", SQLSchema: "", SQLName: "raw_records", Fields: []parse.FieldInfo{{Name: "Id", Type: "int", Column: "id"}, {Name: "Date", Type: "time.Time", Column: "date"}, {Name: "RawSensorId", Type: "int", Column: "raw_sensor_id"}, {Name: "RawChannelId", Type: "int", Column: "raw_channel_id"}, {Name: "RawValue", Type: "int", Column: "raw_value"}}, PKFieldIndex: 0},
-	z: new(rawRecord).Values(),
+// historyRecordTable represents history_records view or table in SQL database.
+var historyRecordTable = &historyRecordTableType{
+	s: parse.StructInfo{Type: "historyRecord", SQLSchema: "", SQLName: "history_records", Fields: []parse.FieldInfo{{Name: "Id", Type: "int", Column: "id"}, {Name: "Date", Type: "time.Time", Column: "date"}, {Name: "AggregationType", Type: "AggregationType", Column: "aggregation_period"}, {Name: "SensorId", Type: "int", Column: "sensor_id"}, {Name: "RawValue", Type: "float32", Column: "raw_value"}, {Name: "ConvertedValue", Type: "float32", Column: "converted_value"}, {Name: "Counter", Type: "int", Column: "counter"}}, PKFieldIndex: 0},
+	z: new(historyRecord).Values(),
 }
 
 // String returns a string representation of this struct or record.
-func (s rawRecord) String() string {
-	res := make([]string, 5)
+func (s historyRecord) String() string {
+	res := make([]string, 7)
 	res[0] = "Id: " + reform.Inspect(s.Id, true)
 	res[1] = "Date: " + reform.Inspect(s.Date, true)
-	res[2] = "RawSensorId: " + reform.Inspect(s.RawSensorId, true)
-	res[3] = "RawChannelId: " + reform.Inspect(s.RawChannelId, true)
+	res[2] = "AggregationType: " + reform.Inspect(s.AggregationType, true)
+	res[3] = "SensorId: " + reform.Inspect(s.SensorId, true)
 	res[4] = "RawValue: " + reform.Inspect(s.RawValue, true)
+	res[5] = "ConvertedValue: " + reform.Inspect(s.ConvertedValue, true)
+	res[6] = "Counter: " + reform.Inspect(s.Counter, true)
 	return strings.Join(res, ", ")
 }
 
 // Values returns a slice of struct or record field values.
 // Returned interface{} values are never untyped nils.
-func (s *rawRecord) Values() []interface{} {
+func (s *historyRecord) Values() []interface{} {
 	return []interface{}{
 		s.Id,
 		s.Date,
-		s.RawSensorId,
-		s.RawChannelId,
+		s.AggregationType,
+		s.SensorId,
 		s.RawValue,
+		s.ConvertedValue,
+		s.Counter,
 	}
 }
 
 // Pointers returns a slice of pointers to struct or record fields.
 // Returned interface{} values are never untyped nils.
-func (s *rawRecord) Pointers() []interface{} {
+func (s *historyRecord) Pointers() []interface{} {
 	return []interface{}{
 		&s.Id,
 		&s.Date,
-		&s.RawSensorId,
-		&s.RawChannelId,
+		&s.AggregationType,
+		&s.SensorId,
 		&s.RawValue,
+		&s.ConvertedValue,
+		&s.Counter,
 	}
 }
 
 // View returns View object for that struct.
-func (s *rawRecord) View() reform.View {
-	return rawRecordTable
+func (s *historyRecord) View() reform.View {
+	return historyRecordTable
 }
 
 // Generate a scope for object
-func (s *rawRecord) Scope() *rawRecordScope {
-	return &rawRecordScope{rawRecord: *s}
+func (s *historyRecord) Scope() *historyRecordScope {
+	return &historyRecordScope{historyRecord: *s}
 }
 
 // Compiles SQL tail for defined order scope
 // TODO: should be compiled via dialects
-func (s *rawRecordScope) getOrderTail(db *reform.DB) (tail string, args []interface{}, err error) {
+func (s *historyRecordScope) getOrderTail(db *reform.DB) (tail string, args []interface{}, err error) {
 	var fieldName string
 	var orderStringParts []string
 
@@ -132,10 +138,10 @@ func (s *rawRecordScope) getOrderTail(db *reform.DB) (tail string, args []interf
 
 // Compiles SQL tail for defined filter
 // TODO: should be compiled via dialects
-func (s *rawRecordScope) getWhereTail(db *reform.DB, filter RawRecordFilter) (tail string, whereTailArgs []interface{}, err error) {
+func (s *historyRecordScope) getWhereTail(db *reform.DB, filter HistoryRecordFilter) (tail string, whereTailArgs []interface{}, err error) {
 	var whereTailStringParts []string
 
-	sample := rawRecord(filter)
+	sample := historyRecord(filter)
 
 	v := reflect.ValueOf(sample)
 	vT := v.Type()
@@ -166,7 +172,7 @@ func (s *rawRecordScope) getWhereTail(db *reform.DB, filter RawRecordFilter) (ta
 
 // Compiles SQL tail for defined order scope and filter
 // TODO: should be compiled via dialects
-func (s *rawRecordScope) compileTailUsingFilter(db *reform.DB, filter RawRecordFilter) (tail string, args []interface{}, err error) {
+func (s *historyRecordScope) compileTailUsingFilter(db *reform.DB, filter HistoryRecordFilter) (tail string, args []interface{}, err error) {
 	whereTailString, whereTailArgs, err := s.getWhereTail(db, filter)
 	if err != nil {
 		return
@@ -192,7 +198,7 @@ func (s *rawRecordScope) compileTailUsingFilter(db *reform.DB, filter RawRecordF
 }
 
 // parseQuerierArgs considers different ways of defning the tail (using scope properties or/and in_args)
-func (s *rawRecordScope) parseQuerierArgs(db *reform.DB, in_args []interface{}) (tail string, args []interface{}, err error) {
+func (s *historyRecordScope) parseQuerierArgs(db *reform.DB, in_args []interface{}) (tail string, args []interface{}, err error) {
 	if len(in_args) > 0 {
 		switch arg := in_args[0].(type) {
 		case string:
@@ -202,20 +208,20 @@ func (s *rawRecordScope) parseQuerierArgs(db *reform.DB, in_args []interface{}) 
 			}
 			tail = arg
 			args = in_args[1:]
-		case rawRecord:
+		case historyRecord:
 			if len(args) > 1 {
 				err = fmt.Errorf("Too many arguments.")
 				return
 			}
-			tail, args, err = s.compileTailUsingFilter(db, RawRecordFilter(arg))
-		case RawRecordFilter:
+			tail, args, err = s.compileTailUsingFilter(db, HistoryRecordFilter(arg))
+		case HistoryRecordFilter:
 			if len(args) > 1 {
 				err = fmt.Errorf("Too many arguments.")
 				return
 			}
 			tail, args, err = s.compileTailUsingFilter(db, arg)
 		default:
-			err = fmt.Errorf("Invalid first element of \"args\". It should be a string or RawRecordFilter.")
+			err = fmt.Errorf("Invalid first element of \"args\". It should be a string or HistoryRecordFilter.")
 		}
 	}
 
@@ -223,16 +229,16 @@ func (s *rawRecordScope) parseQuerierArgs(db *reform.DB, in_args []interface{}) 
 }
 
 // Select is a wrapper for SelectRows() and NextRow(): it makes a query and collects the result into a slice
-func (s *rawRecord) Select(db *reform.DB, args ...interface{}) (result []rawRecord, err error) {
+func (s *historyRecord) Select(db *reform.DB, args ...interface{}) (result []historyRecord, err error) {
 	return s.Scope().Select(db, args...)
 }
-func (s *rawRecordScope) Select(db *reform.DB, args ...interface{}) (result []rawRecord, err error) {
+func (s *historyRecordScope) Select(db *reform.DB, args ...interface{}) (result []historyRecord, err error) {
 	tail, args, err := s.parseQuerierArgs(db, args)
 	if err != nil {
 		return
 	}
 
-	rows, err := db.SelectRows(rawRecordTable, tail, args...)
+	rows, err := db.SelectRows(historyRecordTable, tail, args...)
 	if err != nil {
 		return
 	}
@@ -243,17 +249,17 @@ func (s *rawRecordScope) Select(db *reform.DB, args ...interface{}) (result []ra
 		if err != nil {
 			break
 		}
-		result = append(result, (*s).rawRecord)
+		result = append(result, (*s).historyRecord)
 	}
 
 	return
 }
 
 // "First" a method to select and return only one record.
-func (s *rawRecord) First(db *reform.DB, args ...interface{}) (result rawRecord, err error) {
+func (s *historyRecord) First(db *reform.DB, args ...interface{}) (result historyRecord, err error) {
 	return s.Scope().First(db, args...)
 }
-func (s *rawRecordScope) First(db *reform.DB, args ...interface{}) (result rawRecord, err error) {
+func (s *historyRecordScope) First(db *reform.DB, args ...interface{}) (result historyRecord, err error) {
 	tail, args, err := s.parseQuerierArgs(db, args)
 	if err != nil {
 		return
@@ -265,64 +271,66 @@ func (s *rawRecordScope) First(db *reform.DB, args ...interface{}) (result rawRe
 }
 
 // Create and Insert inserts new record to DB
-func (s *rawRecord) Create(db *reform.DB) (err error) { return s.Scope().Create(db) }
-func (s *rawRecordScope) Create(db *reform.DB) (err error) {
+func (s *historyRecord) Create(db *reform.DB) (err error) { return s.Scope().Create(db) }
+func (s *historyRecordScope) Create(db *reform.DB) (err error) {
 	return db.Insert(s)
 }
-func (s *rawRecord) Insert(db *reform.DB) (err error) { return s.Scope().Insert(db) }
-func (s *rawRecordScope) Insert(db *reform.DB) (err error) {
+func (s *historyRecord) Insert(db *reform.DB) (err error) { return s.Scope().Insert(db) }
+func (s *historyRecordScope) Insert(db *reform.DB) (err error) {
 	return db.Insert(s)
 }
 
 // Save inserts new record to DB is PK is zero and updates existing record if PK is not zero
-func (s *rawRecord) Save(db *reform.DB) (err error) { return s.Scope().Save(db) }
-func (s *rawRecordScope) Save(db *reform.DB) (err error) {
+func (s *historyRecord) Save(db *reform.DB) (err error) { return s.Scope().Save(db) }
+func (s *historyRecordScope) Save(db *reform.DB) (err error) {
 	return db.Save(s)
 }
 
 // Update updates existing record in DB
-func (s *rawRecord) Update(db *reform.DB) (err error) { return s.Scope().Update(db) }
-func (s *rawRecordScope) Update(db *reform.DB) (err error) {
+func (s *historyRecord) Update(db *reform.DB) (err error) { return s.Scope().Update(db) }
+func (s *historyRecordScope) Update(db *reform.DB) (err error) {
 	return db.Update(s)
 }
 
 // Delete deletes existing record in DB
-func (s *rawRecord) Delete(db *reform.DB) (err error) { return s.Scope().Delete(db) }
-func (s *rawRecordScope) Delete(db *reform.DB) (err error) {
+func (s *historyRecord) Delete(db *reform.DB) (err error) { return s.Scope().Delete(db) }
+func (s *historyRecordScope) Delete(db *reform.DB) (err error) {
 	return db.Delete(s)
 }
 
 // Sets order. Arguments should be passed by pairs column-{ASC,DESC}. For example Order("id", "ASC", "value" "DESC")
-func (s *rawRecord) Order(args ...string) (scope *rawRecordScope) { return s.Scope().Order(args...) }
-func (s *rawRecordScope) Order(args ...string) *rawRecordScope {
+func (s *historyRecord) Order(args ...string) (scope *historyRecordScope) {
+	return s.Scope().Order(args...)
+}
+func (s *historyRecordScope) Order(args ...string) *historyRecordScope {
 	s.order = args
 	return s
 }
 
 // Table returns Table object for that record.
-func (s *rawRecord) Table() reform.Table {
-	return rawRecordTable
+func (s *historyRecord) Table() reform.Table {
+	return historyRecordTable
 }
 
 // PKValue returns a value of primary key for that record.
 // Returned interface{} value is never untyped nil.
-func (s *rawRecord) PKValue() interface{} {
+func (s *historyRecord) PKValue() interface{} {
 	return s.Id
 }
 
 // PKPointer returns a pointer to primary key field for that record.
 // Returned interface{} value is never untyped nil.
-func (s *rawRecord) PKPointer() interface{} {
+func (s *historyRecord) PKPointer() interface{} {
 	return &s.Id
 }
 
 // HasPK returns true if record has non-zero primary key set, false otherwise.
-func (s *rawRecord) HasPK() bool {
-	return s.Id != rawRecordTable.z[rawRecordTable.s.PKFieldIndex]
+func (s *historyRecord) HasPK() bool {
+	return s.Id != historyRecordTable.z[historyRecordTable.s.PKFieldIndex]
 }
 
 // SetPK sets record primary key.
-func (s *rawRecord) SetPK(pk interface{}) {
+func (s *historyRecord) SetPK(pk interface{}) {
 	if i64, ok := pk.(int64); ok {
 		s.Id = int(i64)
 	} else {
@@ -332,16 +340,16 @@ func (s *rawRecord) SetPK(pk interface{}) {
 
 var (
 	// check interfaces
-	_ reform.View   = rawRecordTable
-	_ reform.Struct = new(rawRecord)
-	_ reform.Table  = rawRecordTable
-	_ reform.Record = new(rawRecord)
-	_ fmt.Stringer  = new(rawRecord)
+	_ reform.View   = historyRecordTable
+	_ reform.Struct = new(historyRecord)
+	_ reform.Table  = historyRecordTable
+	_ reform.Record = new(historyRecord)
+	_ fmt.Stringer  = new(historyRecord)
 
 	// querier
-	RawRecord = rawRecord{} // Should be read only
+	HistoryRecord = historyRecord{} // Should be read only
 )
 
 func init() {
-	parse.AssertUpToDate(&rawRecordTable.s, new(rawRecord))
+	parse.AssertUpToDate(&historyRecordTable.s, new(historyRecord))
 }

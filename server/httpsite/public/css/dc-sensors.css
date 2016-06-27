@@ -61,6 +61,11 @@ main {
 
 .OpenedFloor {
 	background-image: url(/public/img/graph/textures/dc/floor_opened.png);
+	-webkit-transform: rotate(90deg);
+	-moz-transform: rotate(90deg);
+	-ms-transform: rotate(90deg);
+	-o-transform: rotate(90deg);
+	transform: rotate(90deg);
 }
 
 .AirConditioning {
@@ -73,5 +78,13 @@ main {
 
 .ClosedFloor, .OpenedFloor, .AirConditioning, .ServerRack {
 	background-size: cover;
+}
+
+.rotate180 .ServerRack, .rotate180 .AirConditioning {
+	-webkit-transform: rotate(180deg);
+	-moz-transform: rotate(180deg);
+	-ms-transform: rotate(180deg);
+	-o-transform: rotate(180deg);
+	transform: rotate(180deg);
 }
 

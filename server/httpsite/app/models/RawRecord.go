@@ -10,9 +10,30 @@ import (
 type rawRecord struct {
 	ModelBase
 
-	Id        int       `reform:"id,pk"`
-	Date      time.Time `reform:"date"`
-	SensorId  int       `reform:"sensor_id"`
-	ChannelId int       `reform:"channel_id"`
-	RawValue  int       `reform:"raw_value"`
+	Id           int       `reform:"id,pk"`
+	Date         time.Time `reform:"date"`
+	RawSensorId  int       `reform:"raw_sensor_id"`
+	RawChannelId int       `reform:"raw_channel_id"`
+	RawValue     int       `reform:"raw_value"`
+}
+
+func (r *rawRecord) ToHistoryRecords() (result map[AggregationType]historyRecord) {
+	result = make(map[AggregationType]historyRecord)
+
+	historyRecordAsIs := historyRecord{
+		Date:     r.Date,
+		SensorId: sensorIdMap[r.RawSensorId][r.RawChannelId],
+		RawValue: float32(r.RawValue),
+	}
+	historyRecordAsIs.ConvertValue()
+
+	for _, aggregationType := range aggregationTypes {
+		historyRecord := historyRecordAsIs
+		historyRecord.AggregationType = aggregationType
+		historyRecord.FixDate()
+
+		result[aggregationType] = historyRecord
+	}
+
+	return result
 }

@@ -4,11 +4,11 @@ CREATE TABLE raw_records (
 
 	date		timestamp without time zone default (now() at time zone 'utc'),
 
-	sensor_id	SMALLINT NOT NULL,
-	channel_id	SMALLINT NOT NULL,
+	raw_sensor_id	SMALLINT NOT NULL,
+	raw_channel_id	SMALLINT NOT NULL,
 	raw_value	SMALLINT NOT NULL
 );
 
 CREATE INDEX raw_records_date ON raw_records (date);
-CREATE UNIQUE INDEX raw_records_uniidx ON raw_records (date, sensor_id, channel_id);
+CREATE UNIQUE INDEX raw_records_uniidx ON raw_records (date, raw_sensor_id, raw_channel_id);
 

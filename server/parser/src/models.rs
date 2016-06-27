@@ -4,9 +4,9 @@ use self::time::Timespec;
 
 pub struct RawRecord {
 	pub date:		Timespec,
-	pub sensor_id:		i16,
-	pub channel_id:		i16,
-	pub value:		i16,
+	pub raw_sensor_id:	i16,
+	pub raw_channel_id:	i16,
+	pub raw_value:		i16,
 }
 
 pub const MAX_CHANNELS: usize = 16;

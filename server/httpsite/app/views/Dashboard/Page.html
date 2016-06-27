@@ -11,8 +11,8 @@
 </header-->
 
 <ul>
-{{ range $idx,$logRecord := .logRecords }}
-	<li>{{printf "%v" $logRecord}}</li>
+{{ range $idx,$rawRecord := .rawRecords }}
+	<li>{{printf "%v" $rawRecord}}</li>
 {{ end }}
 </ul>
 

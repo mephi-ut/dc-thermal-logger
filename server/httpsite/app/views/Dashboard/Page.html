@@ -1,22 +1,92 @@
 {{set . "title" "Информация с датчиков Центра Обработки Данных"}}
 {{template "header.html" .}}
 
-<table id='dashboardLayout'>
+<table id='dashboardLayout' width='100%'>
 	<tr>
-		<td>
+		<td width='547px'>
 			{{template "Dashboard/_2DMap.html" .}}
 		</td>
-	</tr>
-	<tr>
+		<td id='sensors'>
+			<span style='visibility:hidden'>hello there! 0x8E30679C</span>
+			<ul style='margin: 10px'>
+			</ul>
+		</td>
+		<td id='graphs' width='99%'>
+			<div id='chartDiv'>
+			</div>
+		</td>
 		<td>
 		</td>
 	</tr>
 </table>
 
-<ul>
-{{ range $idx,$rawRecord := .rawRecords }}
-	<li>{{printf "%v" $rawRecord}}</li>
-{{ end }}
-</ul>
+<script>
+
+	var chart = AmCharts.makeChart("chartDiv", {
+			"type": "serial",
+			"theme": "light",
+			"marginTop":0,
+			"marginRight": 80,
+			"valueAxes": [{
+			"axisAlpha": 0,
+			"position": "left"
+		}],
+		"dataProvider": [{
+			"Date":Date.now(),
+			"ConvertedValue":0.0,
+		}],
+		"graphs": [{
+			"id":"g1",
+			"balloonText": "[[Date]]<br><b><span style='font-size:14px;'>[[ConvertedValue]]</span></b>",
+			"lineColor": "#d1655d",
+			"lineThickness": 2,
+			"negativeLineColor": "#637bb6",
+			"type": "line",
+			"valueField": "ConvertedValue"
+		}],
+		"chartScrollbar": {
+			"graph":"g1",
+			"gridAlpha":0,
+			"color":"#888888",
+			"scrollbarHeight":55,
+			"backgroundAlpha":0,
+			"selectedBackgroundAlpha":0.1,
+			"selectedBackgroundColor":"#888888",
+			"graphFillAlpha":0,
+			"autoGridCount":true,
+			"selectedGraphFillAlpha":0,
+			"graphLineAlpha":0.2,
+			"graphLineColor":"#c2c2c2",
+			"selectedGraphLineColor":"#888888",
+			"selectedGraphLineAlpha":1
+
+		},
+		"chartCursor": {
+			"categoryBalloonDateFormat": "YYYY-MM-DD HH:NN:SS",
+			"cursorPosition": "mouse",
+		},
+		"dataDateFormat": "YYYY-MM-DD HH:NN:SS",
+		"categoryField": "Date",
+		"categoryAxis": {
+			"minPeriod": "mm",
+			"parseDates": true,
+			"minorGridAlpha": 0.1,
+			"minorGridEnabled": true
+		},
+		"export": {
+			"enabled": true,
+			"dateFormat": "YYYY-MM-DD HH:NN:SS"
+		}
+	});
+
+	chart.addListener("rendered", zoomChart);
+	if(chart.zoomChart){
+		chart.zoomChart();
+	}
+
+	function zoomChart(){
+		try{chart.zoomToIndexes(Math.round(chart.dataProvider.length * 0.4), Math.round(chart.dataProvider.length * 0.55))}catch(e){}
+	}
+</script>
 
 {{template "footer.html" .}}

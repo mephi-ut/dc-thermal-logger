@@ -5,6 +5,7 @@
 module:testrunner
 
 GET     /                                       Dashboard.Page
+GET	/HistoryRecords.json			HistoryRecords.Find
 
 # Ignore favicon requests
 GET     /favicon.ico                            404

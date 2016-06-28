@@ -19,6 +19,7 @@ type historyRecordTableType struct {
 type historyRecordScope struct {
 	historyRecord
 	order []string
+	limit int
 }
 
 type HistoryRecordFilter historyRecord
@@ -59,7 +60,7 @@ func (v *historyRecordTableType) PKColumnIndex() uint {
 
 // historyRecordTable represents history_records view or table in SQL database.
 var historyRecordTable = &historyRecordTableType{
-	s: parse.StructInfo{Type: "historyRecord", SQLSchema: "", SQLName: "history_records", Fields: []parse.FieldInfo{{Name: "Id", Type: "int", Column: "id"}, {Name: "Date", Type: "time.Time", Column: "date"}, {Name: "AggregationType", Type: "AggregationType", Column: "aggregation_period"}, {Name: "SensorId", Type: "int", Column: "sensor_id"}, {Name: "RawValue", Type: "float32", Column: "raw_value"}, {Name: "ConvertedValue", Type: "float32", Column: "converted_value"}, {Name: "Counter", Type: "int", Column: "counter"}}, PKFieldIndex: 0},
+	s: parse.StructInfo{Type: "historyRecord", SQLSchema: "", SQLName: "history_records", Fields: []parse.FieldInfo{{Name: "Id", Type: "int", Column: "id"}, {Name: "Date", Type: "MyTime", Column: "date"}, {Name: "AggregationType", Type: "AggregationType", Column: "aggregation_period"}, {Name: "SensorId", Type: "int", Column: "sensor_id"}, {Name: "RawValue", Type: "float32", Column: "raw_value"}, {Name: "ConvertedValue", Type: "float32", Column: "converted_value"}, {Name: "Counter", Type: "int", Column: "counter"}}, PKFieldIndex: 0},
 	z: new(historyRecord).Values(),
 }
 
@@ -114,6 +115,17 @@ func (s *historyRecord) Scope() *historyRecordScope {
 	return &historyRecordScope{historyRecord: *s}
 }
 
+// Compiles SQL tail for defined limit scope
+// TODO: should be compiled via dialects
+func (s *historyRecordScope) getLimitTail(db *reform.DB) (tail string, args []interface{}, err error) {
+	if s.limit <= 0 {
+		return
+	}
+
+	tail = fmt.Sprintf("%v", s.limit)
+	return
+}
+
 // Compiles SQL tail for defined order scope
 // TODO: should be compiled via dialects
 func (s *historyRecordScope) getOrderTail(db *reform.DB) (tail string, args []interface{}, err error) {
@@ -148,7 +160,7 @@ func (s *historyRecordScope) getWhereTail(db *reform.DB, filter HistoryRecordFil
 
 	numField := v.NumField()
 
-	counter := 0
+	placeholderCounter := 0
 	for i := 0; i < numField; i++ {
 		f := v.Field(i)
 		fT := f.Type()
@@ -160,8 +172,8 @@ func (s *historyRecordScope) getWhereTail(db *reform.DB, filter HistoryRecordFil
 		s := vT.Field(i)
 		rN := s.Tag.Get("reform")
 
-		counter++
-		whereTailStringParts = append(whereTailStringParts, rN+" = "+db.Dialect.Placeholder(counter)) // TODO: escape field name
+		placeholderCounter++
+		whereTailStringParts = append(whereTailStringParts, rN+" = "+db.Dialect.Placeholder(placeholderCounter)) // TODO: escape field name
 		whereTailArgs = append(whereTailArgs, f.Interface())
 	}
 
@@ -181,6 +193,10 @@ func (s *historyRecordScope) compileTailUsingFilter(db *reform.DB, filter Histor
 	if err != nil {
 		return
 	}
+	limitTailString, _, err := s.getLimitTail(db)
+	if err != nil {
+		return
+	}
 
 	args = append(whereTailArgs, orderTailArgs...)
 
@@ -192,7 +208,11 @@ func (s *historyRecordScope) compileTailUsingFilter(db *reform.DB, filter Histor
 		orderTailString = " ORDER BY " + orderTailString + " "
 	}
 
-	tail = whereTailString + orderTailString
+	if len(limitTailString) > 0 {
+		limitTailString = " LIMIT " + limitTailString + " "
+	}
+
+	tail = whereTailString + orderTailString + limitTailString
 	return
 
 }
@@ -270,6 +290,45 @@ func (s *historyRecordScope) First(db *reform.DB, args ...interface{}) (result h
 	return
 }
 
+// Sets order. Arguments should be passed by pairs column-{ASC,DESC}. For example Order("id", "ASC", "value" "DESC")
+func (s *historyRecord) Order(args ...interface{}) (scope *historyRecordScope) {
+	return s.Scope().Order(args...)
+}
+func (s *historyRecordScope) Order(argsI ...interface{}) *historyRecordScope {
+	switch len(argsI) {
+	case 0:
+	case 1:
+		arg := argsI[0].(string)
+		args0 := strings.Split(arg, ",")
+		var args []string
+		for _, arg0 := range args0 {
+			args = append(args, strings.Split(arg0, ":")...)
+		}
+		s.order = args
+	default:
+		var args []string
+		for _, argI := range argsI {
+			args = append(args, argI.(string))
+		}
+		s.order = args
+	}
+
+	return s
+}
+
+// Sets limit.
+func (s *historyRecord) Limit(limit int) (scope *historyRecordScope) { return s.Scope().Limit(limit) }
+func (s *historyRecordScope) Limit(limit int) *historyRecordScope {
+	s.limit = limit
+	return s
+}
+
+// "Reload" reloads record using Primary Key
+func (s *HistoryRecordFilter) Reload(db *reform.DB) error { return (*historyRecord)(s).Reload(db) }
+func (s *historyRecord) Reload(db *reform.DB) (err error) {
+	return db.FindByPrimaryKeyTo(s, s.PKValue())
+}
+
 // Create and Insert inserts new record to DB
 func (s *historyRecord) Create(db *reform.DB) (err error) { return s.Scope().Create(db) }
 func (s *historyRecordScope) Create(db *reform.DB) (err error) {
@@ -298,15 +357,6 @@ func (s *historyRecordScope) Delete(db *reform.DB) (err error) {
 	return db.Delete(s)
 }
 
-// Sets order. Arguments should be passed by pairs column-{ASC,DESC}. For example Order("id", "ASC", "value" "DESC")
-func (s *historyRecord) Order(args ...string) (scope *historyRecordScope) {
-	return s.Scope().Order(args...)
-}
-func (s *historyRecordScope) Order(args ...string) *historyRecordScope {
-	s.order = args
-	return s
-}
-
 // Table returns Table object for that record.
 func (s *historyRecord) Table() reform.Table {
 	return historyRecordTable
@@ -330,6 +380,7 @@ func (s *historyRecord) HasPK() bool {
 }
 
 // SetPK sets record primary key.
+func (s *HistoryRecordFilter) SetPK(pk interface{}) { (*historyRecord)(s).SetPK(pk) }
 func (s *historyRecord) SetPK(pk interface{}) {
 	if i64, ok := pk.(int64); ok {
 		s.Id = int(i64)

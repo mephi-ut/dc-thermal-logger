@@ -1,0 +1,14 @@
+{{ $sensors := .sensors }}
+{{ $group   := index .groups .groupName }}
+
+<div class='container clickable' onclick='selectSensorsGroup("{{.groupName}}")'>
+	<ul>
+		{{ range $idx,$sensorId := $group }}
+			{{ if hasIndex $sensors $sensorId }}
+				{{ template "Dashboard/_sensitiveMapTile.html" (index $sensors $sensorId) }}
+			{{ else }}
+				NaN
+			{{ end }}
+		{{ end }}
+	</ul>
+</div>

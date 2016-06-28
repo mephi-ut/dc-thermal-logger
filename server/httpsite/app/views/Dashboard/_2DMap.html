@@ -288,9 +288,10 @@
 	}
 
 	function selectSensor(sensorId) {
+		currentSensorId = sensorId;
 		$.ajax({
 			dataType:	'json',
-			url:		'/HistoryRecords.json?order=date:DESC&limit='+(60*24*7)+'&historyRecord.AggregationType=2&historyRecord.SensorId='+sensorId,
+			url:		'/HistoryRecords.json?order=date:DESC&limit='+$('#limit').val()+'&historyRecord.AggregationType='+$('input[name=aggregationType]:checked').val()+'&historyRecord.SensorId='+sensorId,
 			success:	function(data){
 				data.historyRecords.sort(function(a, b){return a.Date < b.Date ? -1 : a.Date > b.Date})
 				console.log(data.historyRecords);

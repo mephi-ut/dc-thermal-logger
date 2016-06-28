@@ -12,6 +12,17 @@
 			<span style='visibility:hidden'>hello there! 0x8E30679C</span>
 		</td>
 		<td id='graphs' width='99%'>
+			<span id='chartConfig'>
+				&nbsp;Интервал агрегации:
+				<input id='aggregationType1' type='radio' name='aggregationType' value=1        ><label for="aggregationType1"> секунда </label>
+				<input id='aggregationType2' type='radio' name='aggregationType' value=2 checked><label for="aggregationType2"> минута </label>
+				<input id='aggregationType3' type='radio' name='aggregationType' value=3        ><label for="aggregationType3"> 5 минут </label>
+				<input id='aggregationType4' type='radio' name='aggregationType' value=4        ><label for="aggregationType4"> час </label>
+				<input id='aggregationType5' type='radio' name='aggregationType' value=5        ><label for="aggregationType5"> сутки </label>
+				<input id='aggregationType6' type='radio' name='aggregationType' value=6        ><label for="aggregationType6"> неделя </label>
+				|
+				Глубина истории: <input id='limit' type='number' name='limit' value='2500' min=2 max=655350>
+			</span>
 			<div id='chartDiv'>
 			</div>
 		</td>
@@ -21,6 +32,7 @@
 </table>
 
 <script>
+	var currentSensorId = 0;
 
 	var chart = AmCharts.makeChart("chartDiv", {
 			"type": "serial",
@@ -68,7 +80,7 @@
 		"dataDateFormat": "YYYY-MM-DD HH:NN:SS",
 		"categoryField": "Date",
 		"categoryAxis": {
-			"minPeriod": "mm",
+			"minPeriod": "ss",
 			"parseDates": true,
 			"minorGridAlpha": 0.1,
 			"minorGridEnabled": true
@@ -87,6 +99,11 @@
 	function zoomChart(){
 		try{chart.zoomToIndexes(Math.round(chart.dataProvider.length * 0.4), Math.round(chart.dataProvider.length * 0.55))}catch(e){}
 	}
+
+	$('#chartConfig input').change(function(){
+		selectSensor(currentSensorId);
+	})
+
 </script>
 
 {{template "footer.html" .}}

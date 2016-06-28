@@ -13,30 +13,46 @@ const (
 )
 
 type sensorInfo struct {
-	Temp float32
+	Name  string
+	Value float32
 }
 
 type Dashboard struct {
 	*revel.Controller
 }
 
+var groups = map[string][]int {
+		"AirConditioning0": []int{ 1 },
+		"AirConditioning2": []int{ 2 },
+	}
+
 func (c Dashboard) Page() revel.Result {
-	var sensors [SENSORS_COUNT+1]sensorInfo
+	sensors := map[int]sensorInfo{}
 
-	for sensorId := 1; sensorId <= SENSORS_COUNT; sensorId++ {
-		sensor := &sensors[sensorId]
+	for _,group := range groups {
+		for _,sensorId := range group {
+			sensor := sensorInfo{}
+			sensor.Name  = models.SensorNameMap[sensorId]
 
-		theLastHistoryRecord,err := models.HistoryRecord.Order("date", "DESC").First(app.DB, models.HistoryRecordFilter{SensorId: sensorId})
-		if err != nil {
-			if err != reform.ErrNoRows {
-				revel.ERROR.Printf("%s", err.Error())
+			if sensor.Name == "" {
+				continue
 			}
-			continue
+
+			theLastHistoryRecord,err := models.HistoryRecord.Order("date", "DESC").First(app.DB, models.HistoryRecordFilter{SensorId: sensorId, AggregationType: models.AGGR_SECOND})
+			if err != nil {
+				if err != reform.ErrNoRows {
+					revel.ERROR.Printf("%s", err.Error())
+				}
+				continue
+			}
+			sensor.Value = theLastHistoryRecord.ConvertedValue
+
+			sensors[sensorId] = sensor
 		}
-		sensor.Temp = theLastHistoryRecord.ConvertedValue
 	}
 
 	c.RenderArgs["sensors"] = sensors
+	c.RenderArgs["groups" ] = groups
 
 	return c.Render()
 }

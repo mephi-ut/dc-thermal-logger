@@ -4,3 +4,6 @@
 [submodule "server/httpsite/public/img/graph"]
 	path = server/httpsite/public/img/graph
 	url = https://devel.mephi.ru/dyokunev/graph
+[submodule "server/httpsite/public/3rdparty/amcharts3"]
+	path = server/httpsite/public/3rdparty/amcharts3
+	url = https://github.com/amcharts/amcharts3

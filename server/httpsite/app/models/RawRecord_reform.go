@@ -19,6 +19,7 @@ type rawRecordTableType struct {
 type rawRecordScope struct {
 	rawRecord
 	order []string
+	limit int
 }
 
 type RawRecordFilter rawRecord
@@ -108,6 +109,17 @@ func (s *rawRecord) Scope() *rawRecordScope {
 	return &rawRecordScope{rawRecord: *s}
 }
 
+// Compiles SQL tail for defined limit scope
+// TODO: should be compiled via dialects
+func (s *rawRecordScope) getLimitTail(db *reform.DB) (tail string, args []interface{}, err error) {
+	if s.limit <= 0 {
+		return
+	}
+
+	tail = fmt.Sprintf("%v", s.limit)
+	return
+}
+
 // Compiles SQL tail for defined order scope
 // TODO: should be compiled via dialects
 func (s *rawRecordScope) getOrderTail(db *reform.DB) (tail string, args []interface{}, err error) {
@@ -142,7 +154,7 @@ func (s *rawRecordScope) getWhereTail(db *reform.DB, filter RawRecordFilter) (ta
 
 	numField := v.NumField()
 
-	counter := 0
+	placeholderCounter := 0
 	for i := 0; i < numField; i++ {
 		f := v.Field(i)
 		fT := f.Type()
@@ -154,8 +166,8 @@ func (s *rawRecordScope) getWhereTail(db *reform.DB, filter RawRecordFilter) (ta
 		s := vT.Field(i)
 		rN := s.Tag.Get("reform")
 
-		counter++
-		whereTailStringParts = append(whereTailStringParts, rN+" = "+db.Dialect.Placeholder(counter)) // TODO: escape field name
+		placeholderCounter++
+		whereTailStringParts = append(whereTailStringParts, rN+" = "+db.Dialect.Placeholder(placeholderCounter)) // TODO: escape field name
 		whereTailArgs = append(whereTailArgs, f.Interface())
 	}
 
@@ -175,6 +187,10 @@ func (s *rawRecordScope) compileTailUsingFilter(db *reform.DB, filter RawRecordF
 	if err != nil {
 		return
 	}
+	limitTailString, _, err := s.getLimitTail(db)
+	if err != nil {
+		return
+	}
 
 	args = append(whereTailArgs, orderTailArgs...)
 
@@ -186,7 +202,11 @@ func (s *rawRecordScope) compileTailUsingFilter(db *reform.DB, filter RawRecordF
 		orderTailString = " ORDER BY " + orderTailString + " "
 	}
 
-	tail = whereTailString + orderTailString
+	if len(limitTailString) > 0 {
+		limitTailString = " LIMIT " + limitTailString + " "
+	}
+
+	tail = whereTailString + orderTailString + limitTailString
 	return
 
 }
@@ -264,6 +284,45 @@ func (s *rawRecordScope) First(db *reform.DB, args ...interface{}) (result rawRe
 	return
 }
 
+// Sets order. Arguments should be passed by pairs column-{ASC,DESC}. For example Order("id", "ASC", "value" "DESC")
+func (s *rawRecord) Order(args ...interface{}) (scope *rawRecordScope) {
+	return s.Scope().Order(args...)
+}
+func (s *rawRecordScope) Order(argsI ...interface{}) *rawRecordScope {
+	switch len(argsI) {
+	case 0:
+	case 1:
+		arg := argsI[0].(string)
+		args0 := strings.Split(arg, ",")
+		var args []string
+		for _, arg0 := range args0 {
+			args = append(args, strings.Split(arg0, ":")...)
+		}
+		s.order = args
+	default:
+		var args []string
+		for _, argI := range argsI {
+			args = append(args, argI.(string))
+		}
+		s.order = args
+	}
+
+	return s
+}
+
+// Sets limit.
+func (s *rawRecord) Limit(limit int) (scope *rawRecordScope) { return s.Scope().Limit(limit) }
+func (s *rawRecordScope) Limit(limit int) *rawRecordScope {
+	s.limit = limit
+	return s
+}
+
+// "Reload" reloads record using Primary Key
+func (s *RawRecordFilter) Reload(db *reform.DB) error { return (*rawRecord)(s).Reload(db) }
+func (s *rawRecord) Reload(db *reform.DB) (err error) {
+	return db.FindByPrimaryKeyTo(s, s.PKValue())
+}
+
 // Create and Insert inserts new record to DB
 func (s *rawRecord) Create(db *reform.DB) (err error) { return s.Scope().Create(db) }
 func (s *rawRecordScope) Create(db *reform.DB) (err error) {
@@ -292,13 +351,6 @@ func (s *rawRecordScope) Delete(db *reform.DB) (err error) {
 	return db.Delete(s)
 }
 
-// Sets order. Arguments should be passed by pairs column-{ASC,DESC}. For example Order("id", "ASC", "value" "DESC")
-func (s *rawRecord) Order(args ...string) (scope *rawRecordScope) { return s.Scope().Order(args...) }
-func (s *rawRecordScope) Order(args ...string) *rawRecordScope {
-	s.order = args
-	return s
-}
-
 // Table returns Table object for that record.
 func (s *rawRecord) Table() reform.Table {
 	return rawRecordTable
@@ -322,6 +374,7 @@ func (s *rawRecord) HasPK() bool {
 }
 
 // SetPK sets record primary key.
+func (s *RawRecordFilter) SetPK(pk interface{}) { (*rawRecord)(s).SetPK(pk) }
 func (s *rawRecord) SetPK(pk interface{}) {
 	if i64, ok := pk.(int64); ok {
 		s.Id = int(i64)

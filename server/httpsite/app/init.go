@@ -1,7 +1,9 @@
 package app
 
 import (
+	  "fmt"
 	  "time"
+	  "reflect"
 	  "os"
 	  "github.com/revel/revel"
 	  "database/sql"
@@ -37,7 +39,12 @@ func initRecordsConverted() {
 			for _,rawRecord := range rawRecords {
 				var err error
 
-				historyRecords := rawRecord.ToHistoryRecords()
+				historyRecords,er := rawRecord.ToHistoryRecords()
+				if er == models.ErrInvalidSensorId {
+					revel.WARN.Printf("Got error \"%v\" while parsing {%v}", er.Error(), rawRecord)
+					continue
+				}
+
 				for _,historyRecord := range historyRecords {
 					historyRecordFilter := historyRecord
 					historyRecordFilter.RawValue       = 0
@@ -97,6 +104,42 @@ func init() {
 	// ( order dependent )
 	revel.OnAppStart(initDB)
 	revel.OnAppStart(initRecordsConverted)
+
+	revel.TemplateFuncs["dict"] = func(values ...interface{}) (map[string]interface{}, error) {	// This function is copied from http://stackoverflow.com/questions/18276173/calling-a-template-with-several-pipeline-parameters/18276968
+		if len(values)%2 != 0 {
+			return nil, fmt.Errorf("invalid dict call")
+		}
+		dict := make(map[string]interface{}, len(values)/2)
+		for i := 0; i < len(values); i+=2 {
+			key, ok := values[i].(string)
+			if !ok {
+				return nil, fmt.Errorf("dict keys must be strings")
+			}
+			dict[key] = values[i+1]
+		}
+		return dict, nil
+	}
+
+	revel.TemplateFuncs["hasIndex"] = func(a interface{}, idxs ...interface{}) bool {
+		v := reflect.ValueOf(a)
+		t := v.Type()
+
+		for _,idxI := range idxs {
+			switch t.Kind() {
+				case reflect.Slice, reflect.Array:
+					idx := idxI.(int)
+					if idx >= v.Len() {
+						return false
+					}
+				case reflect.Map:
+					r := v.MapIndex(reflect.ValueOf(idxI))
+					if r.Interface() == reflect.Zero(r.Type()).Interface() {
+						return false
+					}
+			}
+		}
+		return true
+	}
 }
 
 // TODO turn this into revel.HeaderFilter

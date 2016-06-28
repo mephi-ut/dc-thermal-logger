@@ -1,5 +1,5 @@
 
-CREATE TYPE history_aggregation_period AS ENUM ('second', 'minute', 'hour', 'day', 'week');
+CREATE TYPE history_aggregation_period AS ENUM ('second', 'minute', '5minutes', 'hour', 'day', 'week');
 
 CREATE TABLE history_records (
 	id		SERIAL PRIMARY KEY,

@@ -1,5 +1,5 @@
 body {
-	background-color: #000;
+	background-color: #fff;
 	font-size:	16px;
 	color:		#eee;
 }
@@ -20,10 +20,10 @@ header {
 }
 
 header, header a {
-	color:		#ccc;
+	color:		#8a8a8a;
 }
 header a:hover {
-	color:		#fff;
+	color:		#000;
 	text-decoration: none;
 }
 
@@ -31,10 +31,10 @@ header a:hover {
 	padding:	10px;
 	height:		90px;
 	width:		90px;
-	background:	#000;
+	background:	#fff;
 }
 #logo:hover {
-	background:	#fff;
+	background:	#000;
 }
 
 main {
@@ -123,12 +123,14 @@ li {
 #sensors {
 	font-size:		20px;
 	white-space:		nowrap;
+	border-top:		1px dotted #888;
+	border-right:		1px dotted #888;
 }
 #sensors a {
-	color:			#c3c3c3;
+	color:			#8a8a8a;
 }
 #sensors a:hover {
-	color:			#ffffff;
+	color:			#000;
 	text-decoration:	none;
 }
 main, main table {
@@ -142,4 +144,8 @@ main, main table {
 #graphs > div {
 	width:			100%;
 	height:			800px;
+}
+#chartDiv {
+	border-top:		1px dotted #888;
+	border-bottom:		1px dotted #888;
 }

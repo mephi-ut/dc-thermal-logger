@@ -275,6 +275,16 @@
 			var sensor   = sensors[sensorId];
 			container.append("<li><a href='#' onclick='selectSensor("+sensorId+")'>"+sensor.Name+" ("+sensor.Value+")</a></li>");
 		}
+
+		if (group.length == 1) {
+			selectSensor(group[0]);
+		} else {
+			chart.dataProvider = [{
+				"Date":Date.now(),
+				"ConvertedValue":0.0,
+			}];
+			chart.validateData();
+		}
 	}
 
 	function selectSensor(sensorId) {

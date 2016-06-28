@@ -7,3 +7,6 @@
 [submodule "server/httpsite/public/3rdparty/amcharts3"]
 	path = server/httpsite/public/3rdparty/amcharts3
 	url = https://github.com/amcharts/amcharts3
+[submodule "server/httpsite/public/3rdparty/amcharts-export"]
+	path = server/httpsite/public/3rdparty/amcharts-export
+	url = https://github.com/amcharts/export

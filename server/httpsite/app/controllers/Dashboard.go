@@ -2,6 +2,7 @@ package controllers
 
 import (
 	//"fmt"
+	"strconv"
 	"devel.mephi.ru/dyokunev/dc-thermal-logger/server/httpsite/app/models"
 	"devel.mephi.ru/dyokunev/dc-thermal-logger/server/httpsite/app"
 	"github.com/revel/revel"
@@ -13,26 +14,36 @@ const (
 )
 
 type sensorInfo struct {
-	Name  string
-	Value float32
+	GroupName	string
+	Name		string
+	Value		float32
+}
+type groupInfo struct {
+	DefaultSensorId	  int
+	SensorIds	[]int
 }
 
 type Dashboard struct {
 	*revel.Controller
 }
 
-var groups = map[string][]int {
-		"AirConditioning0": []int{ 1 },
-		"AirConditioning2": []int{ 2 },
+var groups = map[string]groupInfo {
+		"AirConditioning0":	groupInfo{DefaultSensorId: 1,	SensorIds: []int{ 1 }},
+		"AirConditioning2":	groupInfo{DefaultSensorId: 2,	SensorIds: []int{ 2 }},
+		"AirConditioning1":	groupInfo{DefaultSensorId: 3,	SensorIds: []int{ 3 }},
+
+		"ServerRack5":		groupInfo{DefaultSensorId: 66,	SensorIds: []int{ 64, 66, 65 }},
+		"ServerRack4":		groupInfo{DefaultSensorId: 69,	SensorIds: []int{ 67, 69, 68 }},
 	}
 
-func (c Dashboard) Page() revel.Result {
+func (c Dashboard) page() {
 	sensors := map[int]sensorInfo{}
 
-	for _,group := range groups {
-		for _,sensorId := range group {
+	for groupName,groupInfo := range groups {
+		for _,sensorId := range groupInfo.SensorIds {
 			sensor := sensorInfo{}
-			sensor.Name  = models.SensorNameMap[sensorId]
+			sensor.GroupName = groupName
+			sensor.Name      = models.SensorNameMap[sensorId]
 
 			if sensor.Name == "" {
 				continue
@@ -45,7 +56,7 @@ func (c Dashboard) Page() revel.Result {
 				}
 				continue
 			}
-			sensor.Value = theLastHistoryRecord.ConvertedValue
+			sensor.Value = float32(int((theLastHistoryRecord.ConvertedValue-273.15)*10))/10
 
 			sensors[sensorId] = sensor
 		}
@@ -53,6 +64,20 @@ func (c Dashboard) Page() revel.Result {
 
 	c.RenderArgs["sensors"] = sensors
 	c.RenderArgs["groups" ] = groups
+}
 
+func (c Dashboard) Page() revel.Result {
+	c.page()
 	return c.Render()
 }
+
+func (c Dashboard) PageJson() revel.Result {
+	c.page()
+	sensors := map[string]sensorInfo{}
+	for k,v := range c.RenderArgs["sensors"].(map[int]sensorInfo) {
+		sensors[strconv.Itoa(k)] = v
+	}
+	c.RenderArgs["sensors"] = sensors
+	return c.RenderJson(c.RenderArgs)
+}
+

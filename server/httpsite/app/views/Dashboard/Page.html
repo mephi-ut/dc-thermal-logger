@@ -40,56 +40,60 @@
 			"marginTop":0,
 			"marginRight": 80,
 			"valueAxes": [{
-			"axisAlpha": 0,
-			"position": "left"
-		}],
-		"dataProvider": [{
-			"Date":Date.now(),
-			"ConvertedValue":0.0,
-		}],
-		"graphs": [{
-			"id":"g1",
-			"balloonText": "[[Date]]<br><b><span style='font-size:14px;'>[[ConvertedValue]]</span></b>",
-			"lineColor": "#d1655d",
-			"lineThickness": 2,
-			"negativeLineColor": "#637bb6",
-			"type": "line",
-			"valueField": "ConvertedValue"
-		}],
-		"chartScrollbar": {
-			"graph":"g1",
-			"gridAlpha":0,
-			"color":"#888888",
-			"scrollbarHeight":55,
-			"backgroundAlpha":0,
-			"selectedBackgroundAlpha":0.1,
-			"selectedBackgroundColor":"#888888",
-			"graphFillAlpha":0,
-			"autoGridCount":true,
-			"selectedGraphFillAlpha":0,
-			"graphLineAlpha":0.2,
-			"graphLineColor":"#c2c2c2",
-			"selectedGraphLineColor":"#888888",
-			"selectedGraphLineAlpha":1
+				"title": "T",
+				"axisAlpha": 0,
+				"position": "left",
+				"minimum": 15,
+				"maximum": 40,
+			}],
+			"dataProvider": [{
+				"Date":Date.now(),
+				"ConvertedValue":0.0,
+			}],
+			"graphs": [{
+				"id":"g1",
+				"balloonText": "[[Date]]<br><b><span style='font-size:14px;'>[[ConvertedValue]]</span></b>",
+				"lineColor": "#d1655d",
+				"lineThickness": 2,
+				"negativeLineColor": "#637bb6",
+				"type": "line",
+				"valueField": "ConvertedValue",
+				"negativeBase": 23.5,
+			}],
+			"chartScrollbar": {
+				"graph":"g1",
+				"gridAlpha":0,
+				"color":"#888888",
+				"scrollbarHeight":55,
+				"backgroundAlpha":0,
+				"selectedBackgroundAlpha":0.1,
+				"selectedBackgroundColor":"#888888",
+				"graphFillAlpha":0,
+				"autoGridCount":true,
+				"selectedGraphFillAlpha":0,
+				"graphLineAlpha":0.2,
+				"graphLineColor":"#c2c2c2",
+				"selectedGraphLineColor":"#888888",
+				"selectedGraphLineAlpha":1
 
-		},
-		"chartCursor": {
-			"categoryBalloonDateFormat": "YYYY-MM-DD HH:NN:SS",
-			"cursorPosition": "mouse",
-		},
-		"dataDateFormat": "YYYY-MM-DD HH:NN:SS",
-		"categoryField": "Date",
-		"categoryAxis": {
-			"minPeriod": "ss",
-			"parseDates": true,
-			"minorGridAlpha": 0.1,
-			"minorGridEnabled": true
-		},
-		"export": {
-			"enabled": true,
-			"dateFormat": "YYYY-MM-DD HH:NN:SS"
-		}
-	});
+			},
+			"chartCursor": {
+				"categoryBalloonDateFormat": "YYYY-MM-DD HH:NN:SS",
+				"cursorPosition": "mouse",
+			},
+			"dataDateFormat": "YYYY-MM-DD HH:NN:SS",
+			"categoryField": "Date",
+			"categoryAxis": {
+				"minPeriod": "ss",
+				"parseDates": true,
+				"minorGridAlpha": 0.1,
+				"minorGridEnabled": true
+			},
+			"export": {
+				"enabled": true,
+				"dateFormat": "YYYY-MM-DD HH:NN:SS"
+			}
+		});
 
 	chart.addListener("rendered", zoomChart);
 	if(chart.zoomChart){

@@ -14,11 +14,14 @@ type HistoryRecords struct {
 func (c HistoryRecords) Find(historyRecord models.HistoryRecordFilter, order string, limit int) revel.Result {
 	revel.INFO.Printf("%v", historyRecord)
 
-	var err error
-	c.RenderArgs["historyRecords"],err = models.HistoryRecord.Order(order).Limit(limit).Select(app.DB, historyRecord)
+	historyRecords,err := models.HistoryRecord.Order(order).Limit(limit).Select(app.DB, historyRecord)
 	if err != nil {
 		revel.ERROR.Printf("%v", err.Error())
 	}
+	for i,_ := range historyRecords {
+		historyRecords[i].ConvertedValue -= 273.15
+	}
+	c.RenderArgs["historyRecords"] = historyRecords
 
 	return c.RenderJson(c.RenderArgs)
 }

@@ -7,6 +7,9 @@
 			<div class='ClosedFloor'> </div>
 		</td>
 		<td>
+			<div class='ClosedFloor'> </div>
+		</td>
+		<td>
 			<div id='AirConditioning0' class='AirConditioning'>
 				{{template "Dashboard/_sensorGroup.html" dict "sensors" .sensors "groups" .groups "groupName" "AirConditioning0" }}
 			</div>
@@ -16,6 +19,7 @@
 		</td>
 		<td>
 			<div id='AirConditioning1' class='AirConditioning'>
+				{{template "Dashboard/_sensorGroup.html" dict "sensors" .sensors "groups" .groups "groupName" "AirConditioning1" }}
 			</div>
 		</td>
 		<td>
@@ -23,6 +27,9 @@
 		</td>
 	</tr>
 	<tr>
+		<td>
+			<div class='ClosedFloor'> </div>
+		</td>
 		<td>
 			<div class='ClosedFloor'> </div>
 		</td>
@@ -65,6 +72,12 @@
 		</td>
 		<td>
 			<div id="ServerRack4" class='ServerRack'>
+				{{template "Dashboard/_sensorGroup.html" dict "sensors" .sensors "groups" .groups "groupName" "ServerRack4" }}
+			</div>
+		</td>
+		<td>
+			<div id="ServerRack5" class='ServerRack'>
+				{{template "Dashboard/_sensorGroup.html" dict "sensors" .sensors "groups" .groups "groupName" "ServerRack5" }}
 			</div>
 		</td>
 	</tr>
@@ -93,6 +106,10 @@
 			<div class='OpenedFloor'>
 			</div>
 		</td>
+		<td>
+			<div class='OpenedFloor'>
+			</div>
+		</td>
 	</tr>
 	<tr>
 		<td>
@@ -119,10 +136,18 @@
 			<div class='ClosedFloor'>
 			</div>
 		</td>
+		<td>
+			<div class='ClosedFloor'>
+			</div>
+		</td>
 	</tr>
 	<tr>
 		<td>
 			<div class='ClosedFloor'>
+			</div>
+		</td>
+		<td>
+			<div class='OpenedFloor'>
 			</div>
 		</td>
 		<td>
@@ -149,10 +174,6 @@
 	<tr class='rotate180'>
 		<td>
 			<div class='ClosedFloor'>
-			</div>
-		</td>
-		<td>
-			<div id="ServerRack5" class='ServerRack'>
 			</div>
 		</td>
 		<td>
@@ -172,6 +193,13 @@
 			</div>
 		</td>
 		<td>
+			<div id="ServerRack10" class='ServerRack'>
+			</div>
+		</td>
+		<td>
+			<div id="ServerRack11" class='ServerRack'>
+			</div>
+		</td>
 	</tr>
 	<tr>
 		<td>
@@ -198,8 +226,16 @@
 			<div class='ClosedFloor'>
 			</div>
 		</td>
+		<td>
+			<div class='ClosedFloor'>
+			</div>
+		</td>
 	</tr>
 	<tr class='rotate180'>
+		<td>
+			<div class='ClosedFloor'>
+			</div>
+		</td>
 		<td>
 			<div class='ClosedFloor'>
 			</div>
@@ -251,6 +287,10 @@
 			<div class='ClosedFloor'>
 			</div>
 		</td>
+		<td>
+			<div class='ClosedFloor'>
+			</div>
+		</td>
 	</tr>
 </table>
 
@@ -270,21 +310,13 @@
 
 		container.html('');
 
-		for (var i = 0; i < group.length; i++) {
-			var sensorId = group[i];
+		for (var i = 0; i < group.SensorIds.length; i++) {
+			var sensorId = group.SensorIds[i];
 			var sensor   = sensors[sensorId];
 			container.append("<li><a href='#' onclick='selectSensor("+sensorId+")'>"+sensor.Name+" ("+sensor.Value+")</a></li>");
 		}
 
-		if (group.length == 1) {
-			selectSensor(group[0]);
-		} else {
-			chart.dataProvider = [{
-				"Date":Date.now(),
-				"ConvertedValue":0.0,
-			}];
-			chart.validateData();
-		}
+		selectSensor(group.DefaultSensorId);
 	}
 
 	function selectSensor(sensorId) {

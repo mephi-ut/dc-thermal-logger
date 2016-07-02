@@ -5,6 +5,7 @@
 module:testrunner
 
 GET     /                                       Dashboard.Page
+GET	/Status.json				Dashboard.PageJson
 GET	/HistoryRecords.json			HistoryRecords.Find
 
 # Ignore favicon requests

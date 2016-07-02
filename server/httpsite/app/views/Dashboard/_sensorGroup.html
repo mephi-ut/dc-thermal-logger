@@ -3,7 +3,7 @@
 
 <div class='container clickable' onclick='selectSensorsGroup("{{.groupName}}")'>
 	<ul>
-		{{ range $idx,$sensorId := $group }}
+		{{ range $idx,$sensorId := $group.SensorIds }}
 			{{ if hasIndex $sensors $sensorId }}
 				{{ template "Dashboard/_sensitiveMapTile.html" (index $sensors $sensorId) }}
 			{{ else }}

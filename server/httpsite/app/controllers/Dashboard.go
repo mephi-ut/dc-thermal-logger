@@ -49,7 +49,7 @@ func (c Dashboard) page() {
 				continue
 			}
 
-			theLastHistoryRecord,err := models.HistoryRecord.Order("date", "DESC").First(app.DB, models.HistoryRecordFilter{SensorId: sensorId, AggregationType: models.AGGR_SECOND})
+			theLastHistoryRecord,err := models.HistoryRecord.Order("date", "DESC").First(app.DB, models.HistoryRecordFilter{SensorId: sensorId, AggregationType: models.AGGR_MINUTE})
 			if err != nil {
 				if err != reform.ErrNoRows {
 					revel.ERROR.Printf("%s", err.Error())

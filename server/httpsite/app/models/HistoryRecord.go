@@ -4,8 +4,8 @@ import (
 	"database/sql/driver"
 	"errors"
 	"fmt"
-	"time"
 	"math"
+	"time"
 )
 
 const (
@@ -55,40 +55,41 @@ func (t MyTime) Value() (driver.Value, error) {
 }
 
 func (t *MyTime) MarshalJSON() ([]byte, error) {
-	return []byte("\""+t.Format("2006-01-02 15:04:05")+"\""), nil
+	return []byte("\"" + t.Format("2006-01-02 15:04:05") + "\""), nil
 }
 
 var aggregationTypes = []AggregationType{AGGR_SECOND, AGGR_MINUTE, AGGR_5MINUTES, AGGR_HOUR, AGGR_DAY, AGGR_WEEK}
 var sensorIdMap = map[int]map[int]int{
-	1:  {0: 64,	1: 65,	2: 66,	3: 67,	4: 68,	5: 69,	6: 70,	7: 71},
-	2:  {0: 72,	1: 73,	2: 74,	3: 75,	4: 76,	5: 77,	6: 78,	7: 79},
-	32: {0: 1,	1: 2,	2: 3,	3: 4},
+	1:  {0: 64, 1: 65, 2: 66, 3: 67, 4: 68, 5: 69, 6: 70, 7: 71},
+	2:  {0: 72, 1: 73, 2: 74, 3: 75, 4: 76, 5: 77, 6: 78, 7: 79},
+	32: {0: 1, 1: 2, 2: 3, 3: 4},
 }
 
 type convertionFunction func(rawValue float32) (convertedValue float32)
 
 const (
-	THERMO0_R0	float64 = 4.7
-	THERMO0_B	float64 = 6119
-	THERMO0_T0	float64 = 298.15
-	THERMO0_R_corr	float64	= 0.452
-	THERMO0_R_const	float64 = 1.8
+	THERMO0_R0      float64 = 4.7
+	THERMO0_B       float64 = 6119
+	THERMO0_T0      float64 = 298.15
+	THERMO0_R_corr  float64 = 0.452
+	THERMO0_R_const float64 = 1.8
 )
 
-func calculateThermo0_fitted(rawValue float32) (float32) {
+func calculateThermo0_fitted(rawValue float32) float32 {
 	v := float64(rawValue) / 4096
 
 	r := THERMO0_R_const * (1/v - 1)
 
-	t := THERMO0_B / (math.Log((r-THERMO0_R_corr) / THERMO0_R0) + THERMO0_B/THERMO0_T0)
+	t := THERMO0_B / (math.Log((r-THERMO0_R_corr)/THERMO0_R0) + THERMO0_B/THERMO0_T0)
 
 	return float32(t)
 }
+
 /*func calculateThermo0_graduated(rawValue float32) (float32) {
 	return 0
 }*/
-func calculateThermo0(rawValue float32) (float32) {
-	return /*(*/calculateThermo0_fitted(rawValue)/* + calculateThermo0_graduated(rawValue)) / 2*/
+func calculateThermo0(rawValue float32) float32 {
+	return /*(*/ calculateThermo0_fitted(rawValue) /* + calculateThermo0_graduated(rawValue)) / 2*/
 }
 
 func calculateThermo1(rawValue float32) (convertedValue float32) {
@@ -96,28 +97,28 @@ func calculateThermo1(rawValue float32) (convertedValue float32) {
 }
 
 var valueConvertionMap = map[int]convertionFunction{
-	1: func(rawValue float32) (convertedValue float32) { return float32(rawValue) / 10 + 273.15 },
-	2: func(rawValue float32) (convertedValue float32) { return float32(rawValue) / 10 + 273.15 },
-	3: func(rawValue float32) (convertedValue float32) { return float32(rawValue) / 10 + 273.15 },
-	4: func(rawValue float32) (convertedValue float32) { return float32(rawValue) / 10 + 273.15 },
+	1: func(rawValue float32) (convertedValue float32) { return float32(rawValue)/10 + 273.15 },
+	2: func(rawValue float32) (convertedValue float32) { return float32(rawValue)/10 + 273.15 },
+	3: func(rawValue float32) (convertedValue float32) { return float32(rawValue)/10 + 273.15 },
+	4: func(rawValue float32) (convertedValue float32) { return float32(rawValue)/10 + 273.15 },
 
-	64: func(rawValue float32) (convertedValue float32) { return calculateThermo0(rawValue)		},
-	65: func(rawValue float32) (convertedValue float32) { return calculateThermo0(rawValue)		},
-	66: func(rawValue float32) (convertedValue float32) { return calculateThermo0(rawValue)		},
-	67: func(rawValue float32) (convertedValue float32) { return calculateThermo0(rawValue)		},
-	68: func(rawValue float32) (convertedValue float32) { return calculateThermo0(rawValue)		},
-	69: func(rawValue float32) (convertedValue float32) { return calculateThermo0(rawValue)		},
-	70: func(rawValue float32) (convertedValue float32) { return calculateThermo1(rawValue)		},
+	64: func(rawValue float32) (convertedValue float32) { return calculateThermo0(rawValue) },
+	65: func(rawValue float32) (convertedValue float32) { return calculateThermo0(rawValue) },
+	66: func(rawValue float32) (convertedValue float32) { return calculateThermo0(rawValue) },
+	67: func(rawValue float32) (convertedValue float32) { return calculateThermo0(rawValue) },
+	68: func(rawValue float32) (convertedValue float32) { return calculateThermo0(rawValue) },
+	69: func(rawValue float32) (convertedValue float32) { return calculateThermo0(rawValue) },
+	70: func(rawValue float32) (convertedValue float32) { return calculateThermo1(rawValue) },
 
-	71: func(rawValue float32) (convertedValue float32) { return calculateThermo0(rawValue)		},
-	72: func(rawValue float32) (convertedValue float32) { return calculateThermo0(rawValue)		},
-	73: func(rawValue float32) (convertedValue float32) { return calculateThermo0(rawValue)		},
-	74: func(rawValue float32) (convertedValue float32) { return calculateThermo0(rawValue)		},
-	75: func(rawValue float32) (convertedValue float32) { return calculateThermo0(rawValue)		},
-	76: func(rawValue float32) (convertedValue float32) { return calculateThermo0(rawValue)		},
-	77: func(rawValue float32) (convertedValue float32) { return calculateThermo0(rawValue)		},
-	78: func(rawValue float32) (convertedValue float32) { return calculateThermo0(rawValue)		},
-	79: func(rawValue float32) (convertedValue float32) { return calculateThermo1(rawValue)		},
+	71: func(rawValue float32) (convertedValue float32) { return calculateThermo0(rawValue) },
+	72: func(rawValue float32) (convertedValue float32) { return calculateThermo0(rawValue) },
+	73: func(rawValue float32) (convertedValue float32) { return calculateThermo0(rawValue) },
+	74: func(rawValue float32) (convertedValue float32) { return calculateThermo0(rawValue) },
+	75: func(rawValue float32) (convertedValue float32) { return calculateThermo0(rawValue) },
+	76: func(rawValue float32) (convertedValue float32) { return calculateThermo0(rawValue) },
+	77: func(rawValue float32) (convertedValue float32) { return calculateThermo0(rawValue) },
+	78: func(rawValue float32) (convertedValue float32) { return calculateThermo0(rawValue) },
+	79: func(rawValue float32) (convertedValue float32) { return calculateThermo1(rawValue) },
 }
 var SensorNameMap = map[int]string{
 	1: "Исходящий",

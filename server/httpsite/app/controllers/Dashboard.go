@@ -4,7 +4,7 @@ import (
 	//"fmt"
 	"strconv"
 	"devel.mephi.ru/dyokunev/dc-thermal-logger/server/httpsite/app/models"
-	"devel.mephi.ru/dyokunev/dc-thermal-logger/server/httpsite/app"
+//	"devel.mephi.ru/dyokunev/dc-thermal-logger/server/httpsite/app"
 	"github.com/revel/revel"
 	"gopkg.in/reform.v1"
 )
@@ -49,7 +49,7 @@ func (c Dashboard) page() {
 				continue
 			}
 
-			theLastHistoryRecord,err := models.HistoryRecord.Order("date", "DESC").First(app.DB, models.HistoryRecordFilter{SensorId: sensorId, AggregationType: models.AGGR_MINUTE})
+			theLastHistoryRecord,err := models.HistoryRecord.Order("date", "DESC").Where("counter > 20").First(models.HistoryRecordFilter{SensorId: sensorId, AggregationType: models.AGGR_MINUTE})
 			if err != nil {
 				if err != reform.ErrNoRows {
 					revel.ERROR.Printf("%s", err.Error())

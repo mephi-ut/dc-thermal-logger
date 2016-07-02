@@ -23,6 +23,9 @@ func initDB() {
 	}
 
 	DB = reform.NewDB(simpleDB, postgresql.Dialect, reform.NewPrintfLogger(revel.TRACE.Printf))
+
+	models.HistoryRecord.SetDefaultDB(DB)
+	models.RawRecord.SetDefaultDB(DB)
 }
 
 func initRecordsConverted() {
@@ -30,7 +33,7 @@ func initRecordsConverted() {
 	go func() {
 		for ;; {
 			revel.TRACE.Printf("Running converter iteration…")
-			rawRecords,err := models.RawRecord.Select(DB)
+			rawRecords,err := models.RawRecord.Select()
 			if (err != nil) {
 				revel.ERROR.Printf("Converter error: %v", err.Error())
 				continue
@@ -49,19 +52,19 @@ func initRecordsConverted() {
 					historyRecordFilter := historyRecord
 					historyRecordFilter.RawValue       = 0
 					historyRecordFilter.ConvertedValue = 0
-					historyRecordOld,er := models.HistoryRecord.First(DB, historyRecordFilter)
+					historyRecordOld,er := models.HistoryRecord.First(historyRecordFilter)
 					err = er
 
 					if err != nil {
 						if err == reform.ErrNoRows {
-							revel.TRACE.Printf("historyRecord.Insert(DB)")
+							revel.TRACE.Printf("historyRecord.Insert()")
 							historyRecord.Counter = 1
-							err = historyRecord.Insert(DB)
+							err = historyRecord.Insert()
 						}
 					} else {
 						historyRecordOld.Merge(historyRecord)
-						revel.TRACE.Printf("historyRecordOld.Update(DB)")
-						err = historyRecordOld.Update(DB)
+						revel.TRACE.Printf("historyRecordOld.Update()")
+						err = historyRecordOld.Update()
 					}
 
 					if err != nil {
@@ -72,7 +75,7 @@ func initRecordsConverted() {
 					revel.ERROR.Printf("Converter error: %v", err.Error())
 					continue
 				}
-				err = rawRecord.Delete(DB)
+				err = rawRecord.Delete()
 				if err != nil {
 					revel.ERROR.Printf("Converter error: %v", err.Error())
 				}

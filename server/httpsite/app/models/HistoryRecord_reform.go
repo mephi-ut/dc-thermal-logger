@@ -18,6 +18,9 @@ type historyRecordTableType struct {
 
 type historyRecordScope struct {
 	historyRecord
+
+	db    *reform.DB
+	where [][]interface{}
 	order []string
 	limit int
 }
@@ -112,12 +115,25 @@ func (s *historyRecord) View() reform.View {
 
 // Generate a scope for object
 func (s *historyRecord) Scope() *historyRecordScope {
-	return &historyRecordScope{historyRecord: *s}
+	return &historyRecordScope{historyRecord: *s, db: defaultDB_historyRecord}
+}
+
+// Sets DB to do queries
+func (s *historyRecord) DB(db *reform.DB) (scope *historyRecordScope) { return s.Scope().DB(db) }
+func (s *historyRecordScope) DB(db *reform.DB) *historyRecordScope {
+	s.db = db
+	return s
+}
+
+// Sets default DB (to do not call the scope.DB() method every time)
+func (s *historyRecord) SetDefaultDB(db *reform.DB) (err error) {
+	defaultDB_historyRecord = db
+	return nil
 }
 
 // Compiles SQL tail for defined limit scope
 // TODO: should be compiled via dialects
-func (s *historyRecordScope) getLimitTail(db *reform.DB) (tail string, args []interface{}, err error) {
+func (s *historyRecordScope) getLimitTail() (tail string, args []interface{}, err error) {
 	if s.limit <= 0 {
 		return
 	}
@@ -128,7 +144,7 @@ func (s *historyRecordScope) getLimitTail(db *reform.DB) (tail string, args []in
 
 // Compiles SQL tail for defined order scope
 // TODO: should be compiled via dialects
-func (s *historyRecordScope) getOrderTail(db *reform.DB) (tail string, args []interface{}, err error) {
+func (s *historyRecordScope) getOrderTail() (tail string, args []interface{}, err error) {
 	var fieldName string
 	var orderStringParts []string
 
@@ -150,7 +166,7 @@ func (s *historyRecordScope) getOrderTail(db *reform.DB) (tail string, args []in
 
 // Compiles SQL tail for defined filter
 // TODO: should be compiled via dialects
-func (s *historyRecordScope) getWhereTail(db *reform.DB, filter HistoryRecordFilter) (tail string, whereTailArgs []interface{}, err error) {
+func (s *historyRecordScope) getWhereTailForFilter(filter HistoryRecordFilter) (tail string, whereTailArgs []interface{}, err error) {
 	var whereTailStringParts []string
 
 	sample := historyRecord(filter)
@@ -169,11 +185,11 @@ func (s *historyRecordScope) getWhereTail(db *reform.DB, filter HistoryRecordFil
 			continue
 		}
 
-		s := vT.Field(i)
-		rN := s.Tag.Get("reform")
+		vs := vT.Field(i)
+		rN := vs.Tag.Get("reform")
 
 		placeholderCounter++
-		whereTailStringParts = append(whereTailStringParts, rN+" = "+db.Dialect.Placeholder(placeholderCounter)) // TODO: escape field name
+		whereTailStringParts = append(whereTailStringParts, rN+" = "+s.db.Dialect.Placeholder(placeholderCounter)) // TODO: escape field name
 		whereTailArgs = append(whereTailArgs, f.Interface())
 	}
 
@@ -182,18 +198,84 @@ func (s *historyRecordScope) getWhereTail(db *reform.DB, filter HistoryRecordFil
 	return
 }
 
-// Compiles SQL tail for defined order scope and filter
+// parseQuerierArgs considers different ways of defning the tail (using scope properties or/and in_args)
+func (s *historyRecordScope) parseWhereTailComponent(in_args []interface{}) (tail string, args []interface{}, err error) {
+	if len(in_args) > 0 {
+		switch arg := in_args[0].(type) {
+		case string:
+			tail = arg
+			args = in_args[1:]
+			return
+		case historyRecord:
+			if len(in_args) > 1 {
+				s = s.Where(in_args[1:]...)
+			}
+			tail, args, err = s.getWhereTailForFilter(HistoryRecordFilter(arg))
+		case HistoryRecordFilter:
+			if len(in_args) > 1 {
+				s = s.Where(in_args[1:]...)
+			}
+			tail, args, err = s.getWhereTailForFilter(arg)
+		default:
+			err = fmt.Errorf("Invalid first element of \"in_args\" (%v). It should be a string or HistoryRecordFilter.", reflect.ValueOf(arg).Type().Name())
+			return
+		}
+	}
+
+	return
+}
+
+// Compiles SQL tail for defined filter
 // TODO: should be compiled via dialects
-func (s *historyRecordScope) compileTailUsingFilter(db *reform.DB, filter HistoryRecordFilter) (tail string, args []interface{}, err error) {
-	whereTailString, whereTailArgs, err := s.getWhereTail(db, filter)
+func (s *historyRecordScope) getWhereTail() (tail string, whereTailArgs []interface{}, err error) {
+	var whereTailStringParts []string
+
+	if len(s.where) == 0 {
+		return
+	}
+
+	for _, whereComponent := range s.where {
+		var whereTailStringPart string
+		var whereTailArgsPart []interface{}
+
+		whereTailStringPart, whereTailArgsPart, err = s.parseWhereTailComponent(whereComponent)
+		if err != nil {
+			return
+		}
+
+		if len(whereTailStringPart) > 0 {
+			whereTailStringParts = append(whereTailStringParts, whereTailStringPart)
+		}
+		whereTailArgs = append(whereTailArgs, whereTailArgsPart...)
+	}
+
+	if len(whereTailStringParts) == 0 {
+		return
+	}
+
+	tail = "(" + strings.Join(whereTailStringParts, ") AND (") + ")"
+
+	return
+}
+
+func (s *historyRecordScope) Where(in_args ...interface{}) *historyRecordScope {
+	s.where = append(s.where, in_args)
+	return s
+}
+
+// Compiles SQL tail for defined db/where/order/limit scope
+// TODO: should be compiled via dialects
+func (s *historyRecordScope) getTail() (tail string, args []interface{}, err error) {
+	whereTailString, whereTailArgs, err := s.getWhereTail()
+
 	if err != nil {
 		return
 	}
-	orderTailString, orderTailArgs, err := s.getOrderTail(db)
+	orderTailString, orderTailArgs, err := s.getOrderTail()
 	if err != nil {
 		return
 	}
-	limitTailString, _, err := s.getLimitTail(db)
+	limitTailString, _, err := s.getLimitTail()
 	if err != nil {
 		return
 	}
@@ -217,55 +299,24 @@ func (s *historyRecordScope) compileTailUsingFilter(db *reform.DB, filter Histor
 
 }
 
-// parseQuerierArgs considers different ways of defning the tail (using scope properties or/and in_args)
-func (s *historyRecordScope) parseQuerierArgs(db *reform.DB, in_args []interface{}) (tail string, args []interface{}, err error) {
-	if len(in_args) > 0 {
-		switch arg := in_args[0].(type) {
-		case string:
-			if len(s.order) > 0 {
-				err = fmt.Errorf("This case is not implemented yet. You cannot use Order() and string tail argument in one request.")
-				return
-			}
-			tail = arg
-			args = in_args[1:]
-		case historyRecord:
-			if len(args) > 1 {
-				err = fmt.Errorf("Too many arguments.")
-				return
-			}
-			tail, args, err = s.compileTailUsingFilter(db, HistoryRecordFilter(arg))
-		case HistoryRecordFilter:
-			if len(args) > 1 {
-				err = fmt.Errorf("Too many arguments.")
-				return
-			}
-			tail, args, err = s.compileTailUsingFilter(db, arg)
-		default:
-			err = fmt.Errorf("Invalid first element of \"args\". It should be a string or HistoryRecordFilter.")
-		}
-	}
-
-	return
-}
-
 // Select is a wrapper for SelectRows() and NextRow(): it makes a query and collects the result into a slice
-func (s *historyRecord) Select(db *reform.DB, args ...interface{}) (result []historyRecord, err error) {
-	return s.Scope().Select(db, args...)
+func (s *historyRecord) Select(args ...interface{}) (result []historyRecord, err error) {
+	return s.Scope().Select(args...)
 }
-func (s *historyRecordScope) Select(db *reform.DB, args ...interface{}) (result []historyRecord, err error) {
-	tail, args, err := s.parseQuerierArgs(db, args)
+func (s *historyRecordScope) Select(args ...interface{}) (result []historyRecord, err error) {
+	tail, args, err := s.Where(args...).getTail()
 	if err != nil {
 		return
 	}
 
-	rows, err := db.SelectRows(historyRecordTable, tail, args...)
+	rows, err := s.db.SelectRows(historyRecordTable, tail, args...)
 	if err != nil {
 		return
 	}
 	defer rows.Close()
 
 	for {
-		err := db.NextRow(s, rows)
+		err := s.db.NextRow(s, rows)
 		if err != nil {
 			break
 		}
@@ -276,16 +327,16 @@ func (s *historyRecordScope) Select(db *reform.DB, args ...interface{}) (result 
 }
 
 // "First" a method to select and return only one record.
-func (s *historyRecord) First(db *reform.DB, args ...interface{}) (result historyRecord, err error) {
-	return s.Scope().First(db, args...)
+func (s *historyRecord) First(args ...interface{}) (result historyRecord, err error) {
+	return s.Scope().First(args...)
 }
-func (s *historyRecordScope) First(db *reform.DB, args ...interface{}) (result historyRecord, err error) {
-	tail, args, err := s.parseQuerierArgs(db, args)
+func (s *historyRecordScope) First(args ...interface{}) (result historyRecord, err error) {
+	tail, args, err := s.Where(args...).getTail()
 	if err != nil {
 		return
 	}
 
-	err = db.SelectOneTo(&result, tail, args...)
+	err = s.db.SelectOneTo(&result, tail, args...)
 
 	return
 }
@@ -330,31 +381,31 @@ func (s *historyRecord) Reload(db *reform.DB) (err error) {
 }
 
 // Create and Insert inserts new record to DB
-func (s *historyRecord) Create(db *reform.DB) (err error) { return s.Scope().Create(db) }
-func (s *historyRecordScope) Create(db *reform.DB) (err error) {
-	return db.Insert(s)
+func (s *historyRecord) Create() (err error) { return s.Scope().Create() }
+func (s *historyRecordScope) Create() (err error) {
+	return s.db.Insert(s)
 }
-func (s *historyRecord) Insert(db *reform.DB) (err error) { return s.Scope().Insert(db) }
-func (s *historyRecordScope) Insert(db *reform.DB) (err error) {
-	return db.Insert(s)
+func (s *historyRecord) Insert() (err error) { return s.Scope().Insert() }
+func (s *historyRecordScope) Insert() (err error) {
+	return s.db.Insert(s)
 }
 
 // Save inserts new record to DB is PK is zero and updates existing record if PK is not zero
-func (s *historyRecord) Save(db *reform.DB) (err error) { return s.Scope().Save(db) }
-func (s *historyRecordScope) Save(db *reform.DB) (err error) {
-	return db.Save(s)
+func (s *historyRecord) Save() (err error) { return s.Scope().Save() }
+func (s *historyRecordScope) Save() (err error) {
+	return s.db.Save(s)
 }
 
 // Update updates existing record in DB
-func (s *historyRecord) Update(db *reform.DB) (err error) { return s.Scope().Update(db) }
-func (s *historyRecordScope) Update(db *reform.DB) (err error) {
-	return db.Update(s)
+func (s *historyRecord) Update() (err error) { return s.Scope().Update() }
+func (s *historyRecordScope) Update() (err error) {
+	return s.db.Update(s)
 }
 
 // Delete deletes existing record in DB
-func (s *historyRecord) Delete(db *reform.DB) (err error) { return s.Scope().Delete(db) }
-func (s *historyRecordScope) Delete(db *reform.DB) (err error) {
-	return db.Delete(s)
+func (s *historyRecord) Delete() (err error) { return s.Scope().Delete() }
+func (s *historyRecordScope) Delete() (err error) {
+	return s.db.Delete(s)
 }
 
 // Table returns Table object for that record.
@@ -398,7 +449,8 @@ var (
 	_ fmt.Stringer  = new(historyRecord)
 
 	// querier
-	HistoryRecord = historyRecord{} // Should be read only
+	HistoryRecord           = historyRecord{} // Should be read only
+	defaultDB_historyRecord *reform.DB
 )
 
 func init() {

@@ -14,6 +14,8 @@ const (
 )
 
 type sensorInfo struct {
+	Id		int
+	FullName	string
 	GroupName	string
 	Name		string
 	Value		float32
@@ -42,8 +44,10 @@ func (c Dashboard) page() {
 	for groupName,groupInfo := range groups {
 		for _,sensorId := range groupInfo.SensorIds {
 			sensor := sensorInfo{}
+			sensor.Id        = sensorId
 			sensor.GroupName = groupName
 			sensor.Name      = models.SensorNameMap[sensorId]
+			sensor.FullName  = models.SensorFullNameMap[sensorId]
 
 			if sensor.Name == "" {
 				continue

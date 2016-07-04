@@ -62,6 +62,10 @@ func initRecordsConverted() {
 							err = historyRecord.Insert()
 						}
 					} else {
+						if (historyRecord.ConvertedValue < models.MIN_CONVERTED_VALUE) {
+							revel.INFO.Printf("skipped: historyRecordOld.Update(): SensorId: %v(%v); %v < %v: %v (%v)", historyRecord.SensorId, rawRecord.RawSensorId, historyRecord.ConvertedValue, models.MIN_CONVERTED_VALUE, historyRecord, rawRecord)
+							continue
+						}
 						historyRecordOld.Merge(historyRecord)
 						revel.TRACE.Printf("historyRecordOld.Update()")
 						err = historyRecordOld.Update()

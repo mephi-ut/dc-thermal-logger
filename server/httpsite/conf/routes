@@ -5,6 +5,8 @@
 module:testrunner
 
 GET     /                                       Dashboard.Page
+GET     /Index                                  Dashboard.Page
+GET     /Index.json                             Dashboard.PageJson
 GET	/Status.json				Dashboard.PageJson
 GET	/HistoryRecords.json			HistoryRecords.Find
 

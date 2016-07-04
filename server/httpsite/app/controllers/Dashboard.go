@@ -2,6 +2,7 @@ package controllers
 
 import (
 	//"fmt"
+	"time"
 	"strconv"
 	"devel.mephi.ru/dyokunev/dc-thermal-logger/server/httpsite/app/models"
 //	"devel.mephi.ru/dyokunev/dc-thermal-logger/server/httpsite/app"
@@ -19,6 +20,7 @@ type sensorInfo struct {
 	GroupName	string
 	Name		string
 	Value		float32
+	LastTimestamp	time.Time
 }
 type groupInfo struct {
 	DefaultSensorId	  int
@@ -34,8 +36,8 @@ var groups = map[string]groupInfo {
 		"AirConditioning2":	groupInfo{DefaultSensorId: 2,	SensorIds: []int{ 2 }},
 		"AirConditioning1":	groupInfo{DefaultSensorId: 3,	SensorIds: []int{ 3 }},
 
-		"ServerRack5":		groupInfo{DefaultSensorId: 66,	SensorIds: []int{ 64, 66, 65 }},
-		"ServerRack4":		groupInfo{DefaultSensorId: 69,	SensorIds: []int{ 67, 69, 68 }},
+		"ServerRack5":		groupInfo{DefaultSensorId: 66,	SensorIds: []int{ 64, 65, 66 }},
+		"ServerRack4":		groupInfo{DefaultSensorId: 69,	SensorIds: []int{ 67, 68, 69 }},
 	}
 
 func (c Dashboard) page() {
@@ -60,7 +62,8 @@ func (c Dashboard) page() {
 				}
 				continue
 			}
-			sensor.Value = float32(int((theLastHistoryRecord.ConvertedValue-273.15)*10))/10
+			sensor.LastTimestamp = time.Time(theLastHistoryRecord.Date)
+			sensor.Value         = float32(int((theLastHistoryRecord.ConvertedValue-273.15)*10))/10
 
 			sensors[sensorId] = sensor
 		}

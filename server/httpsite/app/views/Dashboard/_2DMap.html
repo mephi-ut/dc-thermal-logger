@@ -304,6 +304,8 @@
 	var groups  = {{.groups}};
 
 	function selectSensorsGroup(groupName) {
+		window.location='/#selectSensorsGroup='+groupName;
+
 		var group = groups[groupName];
 
 		var container = $('#sensors ul');
@@ -320,6 +322,8 @@
 	}
 
 	function selectSensor(sensorId) {
+		window.location='/#selectSensor='+sensorId;
+
 		currentSensorId = sensorId;
 		$.ajax({
 			dataType:	'json',

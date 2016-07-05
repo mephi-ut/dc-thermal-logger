@@ -43,7 +43,7 @@
 				"title": "T",
 				"axisAlpha": 0,
 				"position": "left",
-				"minimum": 15,
+				"minimum": 10,
 				"maximum": 40,
 			}],
 			"dataProvider": [{
@@ -108,6 +108,19 @@
 		selectSensor(currentSensorId);
 	})
 
+	var selectedItem = window.location.href.split('#')[1];
+
+	if (typeof(selectedItem) != 'undefined' && selectedItem != null && selectedItem != "") {
+		selectedVars = selectedItem.split('=');
+		switch (selectedVars[0]) {
+			case 'selectSensor':
+				selectSensor(selectedVars[1]);
+				break;
+			case 'selectSensorsGroup':
+				selectSensorsGroup(selectedVars[1]);
+				break;
+		}
+	}
 </script>
 
 {{template "footer.html" .}}

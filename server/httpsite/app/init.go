@@ -29,6 +29,9 @@ func initDB() {
 }
 
 func initRecordsConverted() {
+	if revel.DevMode {	// Don't corrupt data
+		return
+	}
 
 	go func() {
 		for ;; {

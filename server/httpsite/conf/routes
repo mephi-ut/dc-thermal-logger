@@ -5,10 +5,13 @@
 module:testrunner
 
 GET     /                                       Dashboard.Page
+GET	/Map.html				Dashboard.MapHtml
 GET     /Index                                  Dashboard.Page
 GET     /Index.json                             Dashboard.PageJson
 GET	/Status.json				Dashboard.PageJson
 GET	/HistoryRecords.json			HistoryRecords.Find
+GET	/TS.json				Dashboard.TSJson
+#WS	/Websocket				Dashboard.Websocket
 
 # Ignore favicon requests
 GET     /favicon.ico                            404

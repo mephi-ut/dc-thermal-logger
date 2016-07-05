@@ -8,6 +8,7 @@ import (
 //	"devel.mephi.ru/dyokunev/dc-thermal-logger/server/httpsite/app"
 	"github.com/revel/revel"
 	"gopkg.in/reform.v1"
+//	"golang.org/x/net/websocket";
 )
 
 const (
@@ -78,6 +79,15 @@ func (c Dashboard) Page() revel.Result {
 	return c.Render()
 }
 
+func (c Dashboard) TSJson() revel.Result {
+	return c.RenderJson(map[string]string{ "ts": time.Now().Format("2006-01-02 15:04:05") })
+}
+
+func (c Dashboard) MapHtml() revel.Result {
+	c.page()
+	return c.Render()
+}
+
 func (c Dashboard) PageJson() revel.Result {
 	c.page()
 	sensors := map[string]sensorInfo{}
@@ -87,4 +97,48 @@ func (c Dashboard) PageJson() revel.Result {
 	c.RenderArgs["sensors"] = sensors
 	return c.RenderJson(c.RenderArgs)
 }
+
+/*
+func (c Dashboard) Websocket(ws *websocket.Conn) revel.Result {
+	revel.TRACE.Printf("New WS connection")
+	var JSON = Codec{jsonMarshal, jsonUnmarshal}
+
+	recvMessages := make(chan message)
+
+	go func() {
+		var msg message;
+		for {
+			err := websocket.JSON.Receive(ws, &msg)
+			if (err != nil) {	// disconnected
+				revel.TRACE.Printf("WS is closed")
+				close(recvMessages)
+				return
+			}
+			recvMessages <- msg
+		}
+	}();
+
+	for {
+		select {
+			case msg, ok := <-recvMessages:
+				if (!ok) { // If the channel is closed
+					revel.TRACE.Printf("recvMessages channel is closed")
+					return nil;
+				}
+
+				if (msg.Type == MSGTYPE_PING) {
+					msg.Type = MSGTYPE_PONG
+					websocket.JSON.Send(ws, &msg)
+					break;
+				}
+
+				switch (msgWords)
+
+				revel.INFO.Printf("Got a WS message: %v\n", msg)
+		}
+	}
+
+	return nil;
+}
+*/
 

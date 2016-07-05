@@ -3,7 +3,7 @@
 
 <table id='dashboardLayout' width='100%'>
 	<tr>
-		<td width='547px'>
+		<td id='mapContainer' width='547px'>
 			{{template "Dashboard/_2DMap.html" .}}
 		</td>
 		<td id='sensors'>
@@ -103,6 +103,26 @@
 	function zoomChart(){
 		try{chart.zoomToIndexes(Math.round(chart.dataProvider.length * 0.4), Math.round(chart.dataProvider.length * 0.55))}catch(e){}
 	}
+	function updateTimestamp() {
+		$.ajax({
+			cache:		false,
+			dataType:	'json',
+			url:		'/TS.json',
+			success:	function(data){
+				$('#ts').html(data.ts);
+			},
+		});
+	}
+	function updateMap() {
+		$.ajax({
+			cache:		false,
+			dataType:	'html',
+			url:		'/Map.html',
+			success:	function(data){
+				$('#mapContainer').html(data);
+			},
+		});
+	}
 
 	$('#chartConfig input').change(function(){
 		selectSensor(currentSensorId);
@@ -121,6 +141,12 @@
 				break;
 		}
 	}
+
+
+	setInterval(function() {
+		updateTimestamp();
+		updateMap();
+	}, 5000);
 </script>
 
 {{template "footer.html" .}}

@@ -321,19 +321,55 @@
 		selectSensor(group.DefaultSensorId);
 	}
 
+	var updateChartInterval = null;
+
 	function selectSensor(sensorId) {
 		window.location='/#selectSensor='+sensorId;
 
+		var aggregationType = parseInt($('input[name=aggregationType]:checked').val());
+
 		currentSensorId = sensorId;
 		$.ajax({
+			cache:		false,
 			dataType:	'json',
-			url:		'/HistoryRecords.json?order=date:DESC&limit='+$('#limit').val()+'&historyRecord.AggregationType='+$('input[name=aggregationType]:checked').val()+'&historyRecord.SensorId='+sensorId,
+			url:		'/HistoryRecords.json?order=date:DESC&limit='+$('#limit').val()+'&historyRecord.AggregationType='+aggregationType+'&historyRecord.SensorId='+sensorId,
 			success:	function(data){
 				data.historyRecords.sort(function(a, b){return a.Date < b.Date ? -1 : a.Date > b.Date})
-				console.log(data.historyRecords);
 				chart.dataProvider = data.historyRecords;
 				chart.validateData();
 			},
 		});
+
+		if (updateChartInterval != null) {
+			clearInterval(updateChartInterval);
+			updateChartInterval = null;
+		}
+
+		var updateIntervalSecs = 60;
+
+		switch (aggregationType) {
+			case 1:
+				updateIntervalSecs=2;
+				break;
+			case 2:
+				updateIntervalSecs=60;
+				break;
+			case 3:
+				updateIntervalSecs=60*5;
+				break;
+			case 4:
+				updateIntervalSecs=60*60;
+				break;
+			case 5:
+				updateIntervalSecs=60*60*24;
+				break;
+			case 6:
+				updateIntervalSecs=60*60*24*7;
+				break;
+		}
+
+		updateChartInterval = setInterval(function() {
+			selectSensor(sensorId);
+		}, 1000 * updateIntervalSecs);
 	}
 </script>

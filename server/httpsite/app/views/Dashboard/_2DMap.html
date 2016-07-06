@@ -321,28 +321,40 @@
 		selectSensor(group.DefaultSensorId);
 	}
 
-	var updateChartInterval = null;
+	var chartPrevRequest = null
+	var updateChartTimeout = null;
 
-	function selectSensor(sensorId) {
+	function selectSensor(sensorId, isUpdateOnly) {
+		if (chartPrevRequest != null) {
+			chartPrevRequest.abort();
+			chartPrevRequest = null;
+		}
+
 		window.location='/#selectSensor='+sensorId;
 
 		var aggregationType = parseInt($('input[name=aggregationType]:checked').val());
 
 		currentSensorId = sensorId;
-		$.ajax({
+		chartPrevRequest = $.ajax({
 			cache:		false,
 			dataType:	'json',
 			url:		'/HistoryRecords.json?order=date:DESC&limit='+$('#limit').val()+'&historyRecord.AggregationType='+aggregationType+'&historyRecord.SensorId='+sensorId,
 			success:	function(data){
+				chartPrevRequest = null;
 				data.historyRecords.sort(function(a, b){return a.Date < b.Date ? -1 : a.Date > b.Date})
 				chart.dataProvider = data.historyRecords;
+				chart.ignoreZoomed = true;
 				chart.validateData();
+				if (!isUpdateOnly) {
+					chart.zoomOut();
+				}
+				//try{chart.zoomToIndexes(Math.round(chart.dataProvider.length * 0.5), chart.dataProvider.length)}catch(e){}
 			},
 		});
 
-		if (updateChartInterval != null) {
-			clearInterval(updateChartInterval);
-			updateChartInterval = null;
+		if (updateChartTimeout != null) {
+			clearTimeout(updateChartTimeout);
+			updateChartTimeout = null;
 		}
 
 		var updateIntervalSecs = 60;
@@ -368,8 +380,8 @@
 				break;
 		}
 
-		updateChartInterval = setInterval(function() {
-			selectSensor(sensorId);
+		updateChartTimeout = setTimeout(function() {
+			selectSensor(sensorId, true);
 		}, 1000 * updateIntervalSecs);
 	}
 </script>

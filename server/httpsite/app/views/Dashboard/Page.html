@@ -39,6 +39,8 @@
 			"theme": "light",
 			"marginTop":0,
 			"marginRight": 80,
+			"zoomOutText": "Показать всё",
+			"zoomOutOnDataUpdate": false,
 			"valueAxes": [{
 				"title": "T",
 				"axisAlpha": 0,
@@ -95,14 +97,7 @@
 			}
 		});
 
-	chart.addListener("rendered", zoomChart);
-	if(chart.zoomChart){
-		chart.zoomChart();
-	}
 
-	function zoomChart(){
-		try{chart.zoomToIndexes(Math.round(chart.dataProvider.length * 0.4), Math.round(chart.dataProvider.length * 0.55))}catch(e){}
-	}
 	function updateTimestamp() {
 		$.ajax({
 			cache:		false,
@@ -142,6 +137,9 @@
 		}
 	}
 
+	setInterval(function() {
+		updateTimestamp();
+	}, 1000);
 
 	setInterval(function() {
 		updateTimestamp();

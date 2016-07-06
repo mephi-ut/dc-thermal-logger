@@ -330,6 +330,11 @@
 			chartPrevRequest = null;
 		}
 
+		if (updateChartTimeout != null) {
+			clearTimeout(updateChartTimeout);
+			updateChartTimeout = null;
+		}
+
 		window.location='/#selectSensor='+sensorId;
 
 		var aggregationType = parseInt($('input[name=aggregationType]:checked').val());
@@ -351,11 +356,6 @@
 				//try{chart.zoomToIndexes(Math.round(chart.dataProvider.length * 0.5), chart.dataProvider.length)}catch(e){}
 			},
 		});
-
-		if (updateChartTimeout != null) {
-			clearTimeout(updateChartTimeout);
-			updateChartTimeout = null;
-		}
 
 		var updateIntervalSecs = 60;
 

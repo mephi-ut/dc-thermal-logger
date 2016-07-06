@@ -8,12 +8,14 @@
 		<link rel="stylesheet" type="text/css" href="/public/css/bootstrap-3.3.6.min.css">
 		<link rel="stylesheet" type="text/css" href="/public/css/dc-sensors.css">
 		<link rel="shortcut icon" type="image/png" href="/public/img/favicon.ico">
-		<link type="text/css" href="/public/3rdparty/amcharts-export/export.css" rel="stylesheet">
 		<script src="/public/js/jquery-2.2.4.min.js"></script>
 		<script src="/public/js/bootstrap-3.3.6.min.js"></script>
-		<script src="/public/3rdparty/amcharts3/amcharts/amcharts.js"></script>
-		<script src="/public/3rdparty/amcharts3/amcharts/serial.js"></script>
-		<script src="/public/3rdparty/amcharts-export/export.min.js"></script>
+		{{ if eq .isMobile false }}
+			<link type="text/css" href="/public/3rdparty/amcharts-export/export.css" rel="stylesheet">
+			<script src="/public/3rdparty/amcharts3/amcharts/amcharts.js"></script>
+			<script src="/public/3rdparty/amcharts3/amcharts/serial.js"></script>
+			<script src="/public/3rdparty/amcharts-export/export.min.js"></script>
+		{{ end }}
 		{{range .moreStyles}}
 			<link rel="stylesheet" type="text/css" href="/public/{{.}}">
 		{{end}}

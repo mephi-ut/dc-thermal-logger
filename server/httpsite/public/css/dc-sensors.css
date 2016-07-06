@@ -154,6 +154,18 @@ main, main table {
 
 #mobileDashboardLayout {
 	display:		none;
+	position:		absolute;
+	top:			0;
+	left:			0;
+	width:			100%;
+	height:			100%;
+	z-index:		-1;
+	color:			#fff;
+	background:		rgba(0,24,0,0.92);
+	z-index:		1;
+	transition:		background 5s ease-in-out 0s;
+	text-align:		center;
+	font-size:		54px;
 }
 
 @media all and (max-width: 800px) {	/* mobile version */
@@ -166,20 +178,13 @@ main, main table {
 	#mapContainer, #sensors, #chartConfig {
 		display:		none;
 	}
-	div#mobileDashboardLayout {
-		color:			#fff;
-		display:		table;
-		background:		rgba(0,24,0,0.92);
-		z-index:		1;
-		transition:		background 5s ease-in-out 0s;
-		text-align:		center;
-		font-size:		54px;
-	}
 	div#mobileDashboardLayout.alarm {
 		background:		rgba(32,0,0,0.92);
 	}
-	div#chartDiv, #mobileDashboardLayout {
+	div#chartDiv, div#mobileDashboardLayout {
 		display:		block;
+	}
+	div#chartDiv {
 		position:		absolute;
 		top:			0;
 		left:			0;

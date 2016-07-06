@@ -1,0 +1,22 @@
+{{set . "title" "Информация с датчиков Центра Обработки Данных"}}
+{{template "header.html" .}}
+
+<script>
+	var updateInterval = null;
+
+	function autoupdatesToggle() {
+		if (updateInterval == null) {
+			setInterval(function() {
+				updateMobileStatus();
+			}, 5000);
+			updateMobileStatus();
+		} else {
+			clearInterval(updateInterval);
+			updateInterval = null;
+		}
+	}
+</script>
+
+{{template "Dashboard/_mobileDashboardLayout.html" dict "isMobile" true "sensors" .sensors}}
+
+{{template "footer.html" .}}

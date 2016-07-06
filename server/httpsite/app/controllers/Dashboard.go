@@ -79,6 +79,39 @@ func (c Dashboard) Page() revel.Result {
 	return c.Render()
 }
 
+func (c Dashboard) minimal() {
+	sensors := map[int]sensorInfo{}
+
+	for _,groupInfo := range groups {
+		for _,sensorId := range groupInfo.SensorIds {
+			if sensorId >= 16 {
+				continue // Only Air Conditioning
+			}
+
+			sensor := sensorInfo{}
+			sensor.FullName  = models.SensorFullNameMap[sensorId]
+
+			theLastHistoryRecord,err := models.HistoryRecord.Order("date", "DESC").Where("counter > 20").First(models.HistoryRecordFilter{SensorId: sensorId, AggregationType: models.AGGR_MINUTE})
+			if err != nil {
+				if err != reform.ErrNoRows {
+					revel.ERROR.Printf("%s", err.Error())
+				}
+				continue
+			}
+			sensor.Value = float32(int((theLastHistoryRecord.ConvertedValue-273.15)*10))/10
+
+			sensors[sensorId] = sensor
+		}
+	}
+
+	c.RenderArgs["sensors"] = sensors
+}
+
+func (c Dashboard) Minimal() revel.Result {
+	c.minimal()
+	return c.Render()
+}
+
 func (c Dashboard) TSJson() revel.Result {
 	return c.RenderJson(map[string]string{ "ts": time.Now().Format("2006-01-02 15:04:05") })
 }
@@ -98,6 +131,16 @@ func (c Dashboard) PageJson() revel.Result {
 	return c.RenderJson(c.RenderArgs)
 }
 
+func (c Dashboard) MinimalJson() revel.Result {
+	c.minimal()
+	sensors := map[string]sensorInfo{}
+	for k,v := range c.RenderArgs["sensors"].(map[int]sensorInfo) {
+		sensors[strconv.Itoa(k)] = v
+	}
+	c.RenderArgs["sensors"] = sensors
+	return c.RenderJson(c.RenderArgs)
+}
+
 /*
 func (c Dashboard) Websocket(ws *websocket.Conn) revel.Result {
 	revel.TRACE.Printf("New WS connection")
@@ -106,7 +149,7 @@ func (c Dashboard) Websocket(ws *websocket.Conn) revel.Result {
 	recvMessages := make(chan message)
 
 	go func() {
-		var msg message;
+		var msg message
 		for {
 			err := websocket.JSON.Receive(ws, &msg)
 			if (err != nil) {	// disconnected
@@ -116,20 +159,20 @@ func (c Dashboard) Websocket(ws *websocket.Conn) revel.Result {
 			}
 			recvMessages <- msg
 		}
-	}();
+	}()
 
 	for {
 		select {
 			case msg, ok := <-recvMessages:
 				if (!ok) { // If the channel is closed
 					revel.TRACE.Printf("recvMessages channel is closed")
-					return nil;
+					return nil
 				}
 
 				if (msg.Type == MSGTYPE_PING) {
 					msg.Type = MSGTYPE_PONG
 					websocket.JSON.Send(ws, &msg)
-					break;
+					break
 				}
 
 				switch (msgWords)
@@ -138,7 +181,7 @@ func (c Dashboard) Websocket(ws *websocket.Conn) revel.Result {
 		}
 	}
 
-	return nil;
+	return nil
 }
 */
 

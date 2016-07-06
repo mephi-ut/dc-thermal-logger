@@ -1,9 +1,43 @@
 
 <script>
+	var dcStatus = 'unknown';
+
 	function mobileRender() {
 		$('#KD1').html(sensors[1].Value);
 		$('#KD2').html(sensors[3].Value);
 		$('#KD3').html(sensors[2].Value);
+
+		dcStatus = 'normal';
+		console.log(sensors);
+		for (var i = 1; i <= 3; i++) {
+			var sensor = sensors[i];
+
+			console.log(sensor.Value)
+
+			if (dcStatus == 'normal') {
+				if (sensor.Value > 23.5) {
+					dcStatus = 'warning';
+				}
+			}
+			if (dcStatus == 'warning') {
+				if (sensor.Value > 25) {
+					dcStatus = 'critical';
+				}
+			}
+		}
+		console.log(dcStatus);
+		$('#mobileDashboardLayout').removeClass('unknown');
+		switch (dcStatus) {
+			case 'normal':
+				$('#mobileDashboardLayout').removeClass('warning').removeClass('critical');
+				break;
+			case 'warning':
+				$('#mobileDashboardLayout').addClass('warning').removeClass('critical');
+				break;
+			case 'critical':
+				$('#mobileDashboardLayout').removeClass('warning').addClass('critical');
+				break;
+		}
 	}
 
 	function updateMobileStatus() {
@@ -20,7 +54,7 @@
 </script>
 
 
-<div id='mobileDashboardLayout' class='' {{if .isMobile}} style='display:block'{{end}}>
+<div id='mobileDashboardLayout'{{if .isMobile}} class='unknown' style='display:block'{{end}}>
 	<table width='100%' height='100%'>
 		<tr height='30%'>
 			<td>

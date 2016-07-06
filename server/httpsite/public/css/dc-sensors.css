@@ -167,9 +167,18 @@ main, main table {
 	color:			#fff;
 	background:		rgba(0,24,0,0.92);
 	z-index:		1;
-	transition:		background 5s ease-in-out 0s;
+	transition:		background 1s ease-in-out 0s;
 	text-align:		center;
 	font-size:		54px;
+}
+div#mobileDashboardLayout.warning {
+	background:		rgba(32,32,0,0.92);
+}
+div#mobileDashboardLayout.critical {
+	background:		rgba(32,0,0,0.92);
+}
+div#mobileDashboardLayout.unknown {
+	background:		rgba(24,24,24,0.92);
 }
 
 @media all and (max-width: 800px) {	/* mobile version */
@@ -181,9 +190,6 @@ main, main table {
 	}
 	#mapContainer, #sensors, #chartConfig {
 		display:		none;
-	}
-	div#mobileDashboardLayout.alarm {
-		background:		rgba(32,0,0,0.92);
 	}
 	div#chartDiv, div#mobileDashboardLayout {
 		display:		block;

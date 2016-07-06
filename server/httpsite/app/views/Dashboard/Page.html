@@ -9,7 +9,7 @@
 		<td id='sensors'>
 			<ul style='margin: 10px'>
 			</ul>
-			<span style='visibility:hidden'>hello there! 0x8E30679C</span>
+			<span style='visibility:hidden'>hello there! 0xE40C8E30679C</span>
 		</td>
 		<td id='graphs' width='99%'>
 			<span id='chartConfig'>
@@ -31,18 +31,49 @@
 	</tr>
 </table>
 
+<div id='mobileDashboardLayout' class=''>
+	<table width='100%' height='100%'>
+		<tr height='33%'>
+			<td id='KD1'>
+			</td>
+		</tr>
+		<tr height='33%'>
+			<td id='KD2'>
+			</td>
+		</tr>
+		<tr height='33%'>
+			<td id='KD3'>
+			</td>
+		</tr>
+	</table>
+</div>
+
 <script>
+	var sensors = {
+	{{ range $sensorId,$sensorInfo := .sensors }}
+		{{ $sensorId }}: {{$sensorInfo}},
+	{{ end }}
+		0:{}
+	};
+	var groups  = {{.groups}};
+
+	var is_debug  = {{ .DevMode }}
+	var is_mobile = window.matchMedia("all and (max-width: 800px)").matches;
+
 	var currentSensorId = 0;
 
 	var chart = AmCharts.makeChart("chartDiv", {
 			"type": "serial",
 			"theme": "light",
 			"marginTop":0,
-			"marginRight": 80,
+			"marginRight": is_mobile?0:80,
 			"zoomOutText": "Показать всё",
-			"zoomOutOnDataUpdate": false,
+			/*"zoomOutOnDataUpdate": false,*/
+			/*"zoomControl": {
+				"zoomControlEnabled": true,
+			},*/
 			"valueAxes": [{
-				"title": "T",
+				"title": is_mobile?null:"T",
 				"axisAlpha": 0,
 				"position": "left",
 				"minimum": 10,
@@ -50,9 +81,12 @@
 			}],
 			"dataProvider": [{
 				"Date":Date.now(),
-				"ConvertedValue":0.0,
+				"ConvertedValue": 0.0,
+				"ConvertedValue2":0.0,
+				"ConvertedValue3":0.0,
 			}],
-			"graphs": [{
+			"graphs": [
+			{
 				"id":"g1",
 				"balloonText": "[[Date]]<br><b><span style='font-size:14px;'>[[ConvertedValue]]</span></b>",
 				"lineColor": "#d1655d",
@@ -61,8 +95,29 @@
 				"type": "line",
 				"valueField": "ConvertedValue",
 				"negativeBase": 23.5,
-			}],
-			"chartScrollbar": {
+			},
+			{
+				"id":"g2",
+				"balloonText": "[[Date]]<br><b><span style='font-size:14px;'>[[ConvertedValue2]]</span></b>",
+				"lineColor": "#61d55d",
+				"lineThickness": 2,
+				"negativeLineColor": "#630080",
+				"type": "line",
+				"valueField": "ConvertedValue2",
+				"negativeBase": 23.5,
+			},
+			{
+				"id":"g3",
+				"balloonText": "[[Date]]<br><b><span style='font-size:14px;'>[[ConvertedValue3]]</span></b>",
+				"lineColor": "#d1655d",
+				"lineThickness": 2,
+				"negativeLineColor": "#636060",
+				"type": "line",
+				"valueField": "ConvertedValue3",
+				"negativeBase": 23.5,
+			},
+			],
+			"chartScrollbar": is_mobile?null:{
 				"graph":"g1",
 				"gridAlpha":0,
 				"color":"#888888",
@@ -97,7 +152,6 @@
 			}
 		});
 
-
 	function updateTimestamp() {
 		$.ajax({
 			cache:		false,
@@ -119,6 +173,29 @@
 		});
 	}
 
+	function mobileRender() {
+		$('#KD1').html(sensors[1].Value);
+		$('#KD2').html(sensors[3].Value);
+		$('#KD3').html(sensors[2].Value);
+	}
+
+	function updateMobileStatus() {
+		$.ajax({
+			cache:		false,
+			dataType:	'json',
+			url:		'/Index.json',
+			success:	function(data){
+				sensors = data.sensors;
+				mobileRender();
+			},
+		});
+	}
+
+	if (is_mobile) {
+		$('#limit').val('60');
+		//$('#aggregationType1').prop('checked', true);
+	}
+
 	$('#chartConfig input').change(function(){
 		selectSensor(currentSensorId);
 	})
@@ -135,16 +212,146 @@
 				selectSensorsGroup(selectedVars[1]);
 				break;
 		}
+	} else {
+		selectSensor(0);
 	}
 
-	setInterval(function() {
-		updateTimestamp();
-	}, 1000);
+	if (is_mobile) {
+		setInterval(function() {
+			updateMobileStatus();
+		}, 5000);
+		mobileRender();
+	}
 
-	setInterval(function() {
-		updateTimestamp();
-		updateMap();
-	}, 5000);
+	if (!is_mobile && !is_debug) {
+		setInterval(function() {
+			updateTimestamp();
+		}, 1000);
+
+		setInterval(function() {
+			updateMap();
+		}, 5000);
+	}
+
+	function selectSensorsGroup(groupName) {
+		window.location='/#selectSensorsGroup='+groupName;
+
+		var group = groups[groupName];
+
+		var container = $('#sensors ul');
+
+		container.html('');
+
+		for (var i = 0; i < group.SensorIds.length; i++) {
+			var sensorId = group.SensorIds[i];
+			var sensor   = sensors[sensorId];
+			container.append("<li><a href='#' onclick='selectSensor("+sensorId+")'>"+sensor.Name+" ("+sensor.Value+")</a></li>");
+		}
+
+		selectSensor(group.DefaultSensorId);
+	}
+
+	var chartPrevRequest = null
+	var updateChartTimeout = null;
+
+	function selectSensor(sensorId, isUpdateOnly) {
+		if (chartPrevRequest != null) {
+			chartPrevRequest.abort();
+			chartPrevRequest = null;
+		}
+
+		if (updateChartTimeout != null) {
+			clearTimeout(updateChartTimeout);
+			updateChartTimeout = null;
+		}
+
+		if (sensorId == 0) {
+			window.location='#';
+		} else {
+			window.location='/#selectSensor='+sensorId;
+		}
+
+		var aggregationType = parseInt($('input[name=aggregationType]:checked').val());
+
+		currentSensorId = sensorId;
+		chartPrevRequest = $.ajax({
+			cache:		false,
+			dataType:	'json',
+			url:		'/HistoryRecords.json?order=date:DESC&limit='+$('#limit').val()+'&historyRecord.AggregationType='+aggregationType+'&historyRecord.SensorId='+sensorId,
+			success:	function(data){
+				if (currentSensorId != sensorId) {
+					if (is_debug) {
+						console.log("currentSensorId != sensorId", currentSensorId, sensorId);
+					}
+					return;
+				}
+				chartPrevRequest = null;
+				if (sensorId == 0) {
+					var mergedHistory = {};
+					for (var i = 0; i < data.historyRecords1.length; i++) {
+						mergedHistory[data.historyRecords1[i].Date] = {}
+						mergedHistory[data.historyRecords1[i].Date].ConvertedValue  = data.historyRecords1[i].ConvertedValue
+					}
+					for (var i = 0; i < data.historyRecords2.length; i++) {
+						if (typeof(mergedHistory[data.historyRecords2[i].Date]) == 'undefined') {
+							mergedHistory[data.historyRecords2[i].Date] = {}
+						}
+						mergedHistory[data.historyRecords2[i].Date].ConvertedValue2 = data.historyRecords2[i].ConvertedValue
+					}
+					for (var i = 0; i < data.historyRecords3.length; i++) {
+						if (typeof(mergedHistory[data.historyRecords3[i].Date]) == 'undefined') {
+							mergedHistory[data.historyRecords3[i].Date] = {}
+						}
+						mergedHistory[data.historyRecords3[i].Date].ConvertedValue3 = data.historyRecords3[i].ConvertedValue
+					}
+
+					data.historyRecords = []
+					for (var key in mergedHistory) {
+						data.historyRecords.push({
+							Date: key,
+							ConvertedValue:  mergedHistory[key].ConvertedValue,
+							ConvertedValue2: mergedHistory[key].ConvertedValue2,
+							ConvertedValue3: mergedHistory[key].ConvertedValue3,
+						});
+					}
+				}
+				data.historyRecords.sort(function(a, b){return a.Date < b.Date ? -1 : a.Date > b.Date})
+				chart.dataProvider = data.historyRecords;
+				chart.validateData();
+				if (!isUpdateOnly) {
+					chart.zoomOut();
+				}
+				//try{chart.zoomToIndexes(Math.round(chart.dataProvider.length * 0.5), chart.dataProvider.length)}catch(e){}
+			},
+		});
+
+		var updateIntervalSecs = 60;
+
+		switch (aggregationType) {
+			case 1:
+				updateIntervalSecs=2;
+				break;
+			case 2:
+				updateIntervalSecs=60;
+				break;
+			case 3:
+				updateIntervalSecs=60*5;
+				break;
+			case 4:
+				updateIntervalSecs=60*60;
+				break;
+			case 5:
+				updateIntervalSecs=60*60*24;
+				break;
+			case 6:
+				updateIntervalSecs=60*60*24*7;
+				break;
+		}
+
+		updateChartTimeout = setTimeout(function() {
+			selectSensor(sensorId, true);
+		}, 1000 * updateIntervalSecs);
+	}
 </script>
 
 {{template "footer.html" .}}

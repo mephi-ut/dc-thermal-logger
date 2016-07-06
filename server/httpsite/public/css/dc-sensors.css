@@ -152,6 +152,10 @@ main, main table {
 #chartDiv {
 }
 
+.comment {
+	font-size:		16px;
+}
+
 #mobileDashboardLayout {
 	display:		none;
 	position:		absolute;

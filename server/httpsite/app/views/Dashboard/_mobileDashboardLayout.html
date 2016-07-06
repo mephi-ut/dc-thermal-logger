@@ -26,18 +26,21 @@
 			<td id='KD1'>
 				{{ $sensor := index .sensors 1 }}
 				{{ $sensor.Value }}
+				<div class='comment'>{{ $sensor.FullName }}</div>
 			</td>
 		</tr>
 		<tr height='30%'>
 			<td id='KD2'>
 				{{ $sensor := index .sensors 3 }}
 				{{ $sensor.Value }}
+				<div class='comment'>{{ $sensor.FullName }}</div>
 			</td>
 		</tr>
 		<tr height='30%'>
 			<td id='KD3'>
 				{{ $sensor := index .sensors 2 }}
 				{{ $sensor.Value }}
+				<div class='comment'>{{ $sensor.FullName }}</div>
 			</td>
 		</tr>
 		<tr height='10%'{{if .isMobile}}{{else}} style='display:none'{{end}} onclick='autoupdatesToggle()'>

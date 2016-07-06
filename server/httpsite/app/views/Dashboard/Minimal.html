@@ -5,7 +5,7 @@
 
 	function autoupdatesToggle() {
 		if (updateInterval == null) {
-			setInterval(function() {
+			updateInterval = setInterval(function() {
 				updateMobileStatus();
 			}, 5000);
 			updateMobileStatus();

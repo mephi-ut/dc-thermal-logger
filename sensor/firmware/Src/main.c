@@ -36,7 +36,7 @@
 /* USER CODE BEGIN Includes */
 
 #ifndef MY_ID
-#	error MY_ID is not defined. MY_ID can be defined via CFLAGS, for example "CFLAGS='-DMY_ID=0' make"
+#	error MY_ID is not defined. MY_ID can be defined via CFLAGS, for example "CFLAGS='-DMY_ID=1' make"
 #endif
 
 #define CHANNELS 8
@@ -62,9 +62,6 @@ enum command_id {
 	CMD_SETDATA = 2,
 };
 
-#define GPIO_PIN_USART1_TX GPIO_PIN_2
-#define GPIO_PORT_USART1 GPIOA
-
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
@@ -88,30 +85,23 @@ static void MX_USART1_UART_Init(void);
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
 
+#define HAL_Delay(a) HAL_Delay_my(a)
 
-void error (float error_num, char infinite) {
-	//printf("%u\r\n", error_num);
-	if (infinite)
-		while (1) {
-			int i = 0;
-			while (i++ < ((int)((float)(error_num) / 1) + 1) ) {
-				GPIOC->BSRR = LED_STATUS_Pin;
-				HAL_Delay(1000 / error_num);
-				GPIOC->BSRR = LED_STATUS_Pin << 16;
-				HAL_Delay(1000 / error_num);
-			}
-		};
+void HAL_Delay_my(uint32_t msec)
+{
+	while (msec--) {
+		volatile int i;
+		i=0; while(i++ < 350);
+	}
+}
 
-	GPIOC->BSRR = LED_STATUS_Pin;
-	HAL_Delay(1000);
-	GPIOC->BSRR = LED_STATUS_Pin << 16;
-	HAL_Delay(100);
-
+void error (float error_num, char infinite)
+{
 	int i=0;
 	while (i++ < error_num) {
-		GPIOC->BSRR = LED_STATUS_Pin;
+		LED_STATUS_GPIO_Port->BSRR = LED_STATUS_Pin;
 		HAL_Delay(300);
-		GPIOC->BSRR = LED_STATUS_Pin << 16;
+		LED_STATUS_GPIO_Port->BSRR = LED_STATUS_Pin << 16;
 		HAL_Delay(200);
 	}
 
@@ -121,12 +111,13 @@ void error (float error_num, char infinite) {
 	return;
 }
 
-static inline void blink(int times, int delay) {
+void blink(int times, int delay)
+{
 	int i = 0;
 	while (i++ < times) {
-		GPIOC->BSRR = LED_STATUS_Pin;
+		LED_STATUS_GPIO_Port->BSRR = LED_STATUS_Pin;
 		HAL_Delay(delay);
-		GPIOC->BSRR = LED_STATUS_Pin << 16;
+		LED_STATUS_GPIO_Port->BSRR = LED_STATUS_Pin << 16;
 		HAL_Delay(delay);
 	}
 
@@ -162,31 +153,56 @@ int main(void)
   MX_USART1_UART_Init();
 
   /* USER CODE BEGIN 2 */
+	blink(1, 50);
 
+#define ADC_DMA
+#ifdef ADC_DMA
 	{
-		HAL_ADC_Stop_DMA(&hadc);
-		HAL_ADC_Stop(&hadc);
+		//HAL_ADC_Stop_DMA(&hadc);
+		//HAL_ADC_Stop(&hadc);
+		LED_STATUS_GPIO_Port->BSRR = LED_STATUS_Pin;
 		int r = HAL_ADC_Start_DMA(&hadc, (uint32_t *)&scmd.channel, sizeof(scmd.channel)/sizeof(*scmd.channel));
+		LED_STATUS_GPIO_Port->BSRR = LED_STATUS_Pin << 16;
 
+		(void)r; // anti-warning
+#	ifdef RESET_ON_DMA_ERROR
 		if (r != HAL_OK)
 			error(1+r, 0);
+#	endif
 	}
+#else
+	LED_STATUS_GPIO_Port->BSRR = LED_STATUS_Pin;
+	int r = HAL_ADC_Start();
+	LED_STATUS_GPIO_Port->BSRR = LED_STATUS_Pin << 16;
+
+	(void)r; // anti-warning
+#	ifdef RESET_ON_DMA_ERROR
+	if (r != HAL_OK)
+		error(1+r, 0);
+#	endif
+
+#	error is not implemented, yet
+#endif
 
 	scmd.command_id = CMD_SETDATA;
 	scmd.sensor_id  = MY_ID;
 	scmd.channels   = CHANNELS;
 
-	LED_STATUS_GPIO_Port->BSRR = LED_STATUS_Pin;
-
+	LED_UART_TX_GPIO_Port->BSRR = LED_UART_TX_Pin;
 	while(1) {
+		//blink(1, 50);
+
 		// Receiving command
 		{
+			//LED_STATUS_GPIO_Port->BSRR = LED_STATUS_Pin;
 			collectorcommand_t ccmd;
 
 			{
 				int r = HAL_UART_Receive(&huart1, (uint8_t *)&ccmd, sizeof(ccmd), ~0);
 				if (r != HAL_OK)
 					error(1+r, 0);
+
+				//while (!received);
 			}
 
 			if (ccmd.command_id != CMD_GETDATA)
@@ -194,19 +210,37 @@ int main(void)
 
 			if (ccmd.sensor_id  != MY_ID)
 				continue;
+
+			//LED_STATUS_GPIO_Port->BSRR = LED_STATUS_Pin << 16;
 		}
 
 		// Sending command
 		{
 			LED_UART_TX_GPIO_Port->BSRR = LED_UART_TX_Pin;
 
-			int r = HAL_UART_Transmit(&huart1, (uint8_t *)&scmd, sizeof(scmd), ~0);
-			if (r != HAL_OK)
-				error(1+r, 0);
+			int r;
+			do {
+				r = HAL_UART_Transmit(&huart1, (uint8_t *)&scmd, sizeof(scmd), ~0);
+				switch (r) {
+					case HAL_OK:
+						break;
+					case HAL_BUSY:
+						blink(2, 200);
+						blink(2, 100);
+						blink(2, 50);
+						break;
+					default: 
+						error(1+r, 0);
+				}
+			} while (r == HAL_BUSY);
 
 			LED_UART_TX_GPIO_Port->BSRR = LED_UART_TX_Pin << 16;
 
-			HAL_ADC_Start_DMA(&hadc, (uint32_t *)&scmd.channel, sizeof(scmd.channel)/sizeof(*scmd.channel));
+#ifdef ADC_DMA
+			//LED_STATUS_GPIO_Port->BSRR = LED_STATUS_Pin;
+			//HAL_ADC_Start_DMA(&hadc, (uint32_t *)&scmd.channel, sizeof(scmd.channel)/sizeof(*scmd.channel));
+			//LED_STATUS_GPIO_Port->BSRR = LED_STATUS_Pin << 16;
+#endif
 		}
 	}
 
@@ -376,12 +410,19 @@ void MX_GPIO_Init(void)
   __GPIOA_CLK_ENABLE();
   __GPIOB_CLK_ENABLE();
 
-  /*Configure GPIO pins : LED_UART_TX_Pin LED_STATUS_Pin */
-  GPIO_InitStruct.Pin = LED_UART_TX_Pin|LED_STATUS_Pin;
+  /*Configure GPIO pins : LED_STATUS_Pin LED_UART_TX_Pin */
+  GPIO_InitStruct.Pin = LED_STATUS_Pin|LED_UART_TX_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_LOW;
   HAL_GPIO_Init(GPIOF, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : LED_UART_TX2_Pin LED_STATUS2_Pin */
+  GPIO_InitStruct.Pin = LED_UART_TX2_Pin|LED_STATUS2_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_LOW;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
 }
 

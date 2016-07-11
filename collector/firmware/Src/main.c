@@ -267,10 +267,10 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-	/* // ICMP echo server
-	while (1)
+	// ICMP echo server
+	/*while (1)
 	{
-		packetloop_icmp_udp(net_buf, ES_enc28j60PacketReceive(NET_BUF_SIZE, net_buf));
+		packetloop_icmp_udp(net_sendbuf, ES_enc28j60PacketReceive(NET_BUF_SIZE, net_sendbuf));
 	}*/
 
 	uint8_t awaitingForSending = 0;

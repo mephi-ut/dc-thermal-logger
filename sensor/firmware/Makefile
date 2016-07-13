@@ -13,7 +13,7 @@ TARGET = firmware
 # debug build?
 DEBUG = 1
 # optimization
-OPT = -Os -flto
+OPT = #-Os -flto
 
 #######################################
 # pathes

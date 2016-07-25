@@ -43,6 +43,9 @@
 
 typedef uint16_t dataitem_t;
 
+dataitem_t adc_raw[CHANNELS];
+uint32_t adc[CHANNELS];
+
 struct sensorcommand {
 	dataitem_t      command_id;
 	dataitem_t       sensor_id;
@@ -124,6 +127,12 @@ void blink(int times, int delay)
 	return;
 }
 
+/*
+void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
+{
+}
+*/
+
 /* USER CODE END PFP */
 
 /* USER CODE BEGIN 0 */
@@ -161,7 +170,7 @@ int main(void)
 		//HAL_ADC_Stop_DMA(&hadc);
 		//HAL_ADC_Stop(&hadc);
 		LED_STATUS_GPIO_Port->BSRR = LED_STATUS_Pin;
-		int r = HAL_ADC_Start_DMA(&hadc, (uint32_t *)&scmd.channel, sizeof(scmd.channel)/sizeof(*scmd.channel));
+		int r = HAL_ADC_Start_DMA(&hadc, (uint32_t *)adc_raw, sizeof(adc)/sizeof(*adc));
 		LED_STATUS_GPIO_Port->BSRR = LED_STATUS_Pin << 16;
 
 		(void)r; // anti-warning
@@ -321,7 +330,7 @@ void MX_ADC_Init(void)
     */
   sConfig.Channel = ADC_CHANNEL_0;
   sConfig.Rank = ADC_RANK_CHANNEL_NUMBER;
-  sConfig.SamplingTime = ADC_SAMPLETIME_1CYCLE_5;
+  sConfig.SamplingTime = ADC_SAMPLETIME_71CYCLES_5;
   HAL_ADC_ConfigChannel(&hadc, &sConfig);
 
     /**Configure for the selected ADC regular channel to be converted. 

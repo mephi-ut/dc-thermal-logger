@@ -32,10 +32,10 @@
 				$('#mobileDashboardLayout').removeClass('warning').removeClass('critical');
 				break;
 			case 'warning':
-				$('#mobileDashboardLayout').addClass('warning').removeClass('critical');
+				$('#mobileDashboardLayout').   addClass('warning').removeClass('critical');
 				break;
 			case 'critical':
-				$('#mobileDashboardLayout').removeClass('warning').addClass('critical');
+				$('#mobileDashboardLayout').removeClass('warning').   addClass('critical');
 				break;
 		}
 	}
@@ -60,27 +60,29 @@
 			<td>
 				{{ $sensor := index .sensors 1 }}
 				<span id='KD1'>{{ $sensor.Value }}</span>
-				<div class='comment'>{{ $sensor.FullName }}</div>
+				{{if ne .mobileShowNames "false"}}<div class='comment'>{{ $sensor.FullName }}</div>{{end}}
 			</td>
 		</tr>
 		<tr height='30%'>
 			<td>
 				{{ $sensor := index .sensors 3 }}
 				<span id='KD2'>{{ $sensor.Value }}</span>
-				<div class='comment'>{{ $sensor.FullName }}</div>
+				{{if ne .mobileShowNames "false"}}<div class='comment'>{{ $sensor.FullName }}</div>{{end}}
 			</td>
 		</tr>
 		<tr height='30%'>
 			<td>
 				{{ $sensor := index .sensors 2 }}
 				<span id='KD3'>{{ $sensor.Value }}</span>
-				<div class='comment'>{{ $sensor.FullName }}</div>
+				{{if ne .mobileShowNames "false"}}<div class='comment'>{{ $sensor.FullName }}</div>{{end}}
 			</td>
 		</tr>
+{{ if eq .mobileAutoupdate "toggle" }}
 		<tr height='10%'{{if .isMobile}}{{else}} style='display:none'{{end}} onclick='autoupdatesToggle()'>
 			<td style='font-size:16px'>
 				<label for='autoupdate'>Включить автообновление:</label><input style='margin-left:5px' id='autoupdate' type='checkbox'>
 			</td>
 		</tr>
+{{ end }}
 	</table>
 </div>

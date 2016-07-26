@@ -4,6 +4,7 @@ import (
 	//"fmt"
 	"time"
 	"strconv"
+	"sync"
 	"devel.mephi.ru/dyokunev/dc-thermal-logger/server/httpsite/app/models"
 //	"devel.mephi.ru/dyokunev/dc-thermal-logger/server/httpsite/app"
 	"github.com/revel/revel"
@@ -37,41 +38,81 @@ var groups = map[string]groupInfo {
 		"AirConditioning2":	groupInfo{DefaultSensorId: 2,	SensorIds: []int{ 2 }},
 		"AirConditioning1":	groupInfo{DefaultSensorId: 3,	SensorIds: []int{ 3 }},
 
-		"ServerRack5":		groupInfo{DefaultSensorId: 66,	SensorIds: []int{ 64, 65, 66 }},
-		"ServerRack4":		groupInfo{DefaultSensorId: 69,	SensorIds: []int{ 67, 68, 69 }},
+		"ServerRack5":		groupInfo{DefaultSensorId: 66,	SensorIds: []int{ 64,  65,  66 }},
+		"ServerRack4":		groupInfo{DefaultSensorId: 69,	SensorIds: []int{ 67,  68,  69 }},
+		"ServerRack3":		groupInfo{DefaultSensorId: 74,	SensorIds: []int{ 72,  73,  74 }},
+		"ServerRack2":		groupInfo{DefaultSensorId: 77,	SensorIds: []int{ 75,  76,  77 }},
+		"ServerRack1":		groupInfo{DefaultSensorId: 85,	SensorIds: []int{ 84,  83,  85 }},
+		"ServerRack0":		groupInfo{DefaultSensorId: 81,	SensorIds: []int{ 80,  82,  81 }},
+		"ServerRack6":		groupInfo{DefaultSensorId: 89,	SensorIds: []int{ 89,  88,  90 }},
+		"ServerRack7":		groupInfo{DefaultSensorId: 93,	SensorIds: []int{ 93,  91,  92 }},
+		"ServerRack8":		groupInfo{DefaultSensorId: 98,	SensorIds: []int{ 98,  97,  96 }},
+		"ServerRack9":		groupInfo{DefaultSensorId: 101,	SensorIds: []int{ 99,  101, 100 }},
+		"ServerRack10":		groupInfo{DefaultSensorId: 106,	SensorIds: []int{ 106, 105, 104 }},
+		"ServerRack11":		groupInfo{DefaultSensorId: 109,	SensorIds: []int{ 109, 108, 107 }},
 	}
 
+func (c Dashboard) get(key, defaultValue string) (result string) {
+	c.Params.Bind(&result, key)
+	if result == "" {
+		return defaultValue
+	}
+
+	return
+}
+
+func (c Dashboard) considerGetParameters() {
+	for k,v := range map[string]string{
+			"mobileAutoupdate":	"toggle",
+			"mobileShowNames":	"true",
+	} {
+		c.RenderArgs[k] = c.get(k, v);
+	}
+}
+
 func (c Dashboard) page() {
+	mutex := sync.Mutex{}
 	sensors := map[int]sensorInfo{}
 
-	for groupName,groupInfo := range groups {
-		for _,sensorId := range groupInfo.SensorIds {
-			sensor := sensorInfo{}
-			sensor.Id        = sensorId
-			sensor.GroupName = groupName
-			sensor.Name      = models.SensorNameMap[sensorId]
-			sensor.FullName  = models.SensorFullNameMap[sensorId]
+	sem := make(chan bool, 16)
+	for groupName,grpInfo := range groups {
+		sem <- true
+		go func(groupInfo groupInfo) {
+			defer func() { <-sem }()
+			for _,sensorId := range groupInfo.SensorIds {
+				sensor := sensorInfo{}
+				sensor.Id        = sensorId
+				sensor.GroupName = groupName
+				sensor.Name      = models.SensorNameMap[sensorId]
+				sensor.FullName  = models.SensorFullNameMap[sensorId]
 
-			if sensor.Name == "" {
-				continue
-			}
-
-			theLastHistoryRecord,err := models.HistoryRecord.Order("date", "DESC").Where("counter > 20").First(models.HistoryRecordFilter{SensorId: sensorId, AggregationType: models.AGGR_MINUTE})
-			if err != nil {
-				if err != reform.ErrNoRows {
-					revel.ERROR.Printf("%s", err.Error())
+				if sensor.Name == "" {
+					continue
 				}
-				continue
-			}
-			sensor.LastTimestamp = time.Time(theLastHistoryRecord.Date)
-			sensor.Value         = float32(int((theLastHistoryRecord.ConvertedValue-273.15)*10))/10
 
-			sensors[sensorId] = sensor
-		}
+				theLastHistoryRecord,err := models.HistoryRecord.Order("date", "DESC").Where("counter > 20").First(models.HistoryRecordFilter{SensorId: sensorId, AggregationType: models.AGGR_MINUTE})
+				if err != nil {
+					if err != reform.ErrNoRows {
+						revel.ERROR.Printf("%s", err.Error())
+					}
+					continue
+				}
+				sensor.LastTimestamp = time.Time(theLastHistoryRecord.Date)
+				sensor.Value         = float32(int((theLastHistoryRecord.ConvertedValue-273.15)*10))/10
+
+				mutex.Lock()
+				sensors[sensorId] = sensor
+				mutex.Unlock()
+			}
+		}(grpInfo);
+	}
+	for i := 0; i < cap(sem); i++ {
+		sem <- true
 	}
 
 	c.RenderArgs["sensors"] = sensors
 	c.RenderArgs["groups" ] = groups
+	c.considerGetParameters()
 }
 
 func (c Dashboard) Page() revel.Result {
@@ -105,6 +146,7 @@ func (c Dashboard) minimal() {
 	}
 
 	c.RenderArgs["sensors"] = sensors
+	c.considerGetParameters()
 }
 
 func (c Dashboard) Minimal() revel.Result {

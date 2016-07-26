@@ -5,6 +5,7 @@
 module:testrunner
 
 GET     /                                       Dashboard.Page
+GET	/logout					App.Logout
 GET	/m					Dashboard.Minimal
 GET	/m.json					Dashboard.MinimalJson
 GET	/Map.html				Dashboard.MapHtml

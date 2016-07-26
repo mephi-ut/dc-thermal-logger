@@ -1,3 +1,7 @@
 <li>
-	{{ .Value }}
+	{{ if isEmpty . }}
+		NaN
+	{{ else }}
+		{{ .Value }}
+	{{ end }}
 </li>

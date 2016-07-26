@@ -17,6 +17,19 @@ type rawRecord struct {
 	RawValue     int       `reform:"raw_value"`
 }
 
+type RawRecordE struct {
+	rawRecord
+}
+
+func (r *RawRecordE) Init(rawRecord rawRecord) RawRecordE {
+	r.rawRecord = rawRecord
+	return *r
+}
+
+func NewRawRecordE(rawRecord rawRecord) (rawRecordE RawRecordE) {
+	return rawRecordE.Init(rawRecord)
+}
+
 func (r *rawRecord) ToHistoryRecords() (result map[AggregationType]historyRecord, err error) {
 	result = make(map[AggregationType]historyRecord)
 

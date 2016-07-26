@@ -6,14 +6,18 @@ import (
 	  "reflect"
 	  "os"
 	  "github.com/revel/revel"
+	  "net/http"
+	  "net/url"
 	  "database/sql"
 	  "gopkg.in/reform.v1"
 	  "gopkg.in/reform.v1/dialects/postgresql"
 	  "devel.mephi.ru/dyokunev/dc-thermal-logger/server/httpsite/app/models"
 	_ "github.com/lib/pq"
+	  "gopkg.in/cas.v1"
 )
 
 var DB *reform.DB
+var CasClient *cas.Client
 
 func initDB() {
 	simpleDB, err := sql.Open("postgres", revel.Config.StringDefault("app.db_url", "postgres://localhost/sensors"))
@@ -42,55 +46,72 @@ func initRecordsConverted() {
 				continue
 			}
 
+			sem := make(chan bool, 8)
+
 			for _,rawRecord := range rawRecords {
-				var err error
+				sem <- true
 
-				historyRecords,er := rawRecord.ToHistoryRecords()
-				if er == models.ErrInvalidSensorId {
-					revel.WARN.Printf("Got error \"%v\" while parsing {%v}", er.Error(), rawRecord)
-					continue
-				}
+				rawRecordE := models.NewRawRecordE(rawRecord);
 
-				for _,historyRecord := range historyRecords {
-					historyRecordFilter := historyRecord
-					historyRecordFilter.RawValue       = 0
-					historyRecordFilter.ConvertedValue = 0
-					historyRecordOld,er := models.HistoryRecord.First(historyRecordFilter)
-					err = er
+				go func(rawRecord models.RawRecordE) {
+					defer func() { <-sem }()
 
-					if err != nil {
-						if err == reform.ErrNoRows {
-							revel.TRACE.Printf("historyRecord.Insert()")
-							historyRecord.Counter = 1
-							err = historyRecord.Insert()
-						}
-					} else {
-						if (historyRecord.ConvertedValue < models.MIN_CONVERTED_VALUE) {
-							revel.INFO.Printf("skipped: historyRecordOld.Update(): SensorId: %v(%v); %v < %v: %v (%v)", historyRecord.SensorId, rawRecord.RawSensorId, historyRecord.ConvertedValue, models.MIN_CONVERTED_VALUE, historyRecord, rawRecord)
-							continue
-						}
-						historyRecordOld.Merge(historyRecord)
-						revel.TRACE.Printf("historyRecordOld.Update()")
-						err = historyRecordOld.Update()
+					var err error
+
+					historyRecords,er := rawRecord.ToHistoryRecords()
+					if er == models.ErrInvalidSensorId {
+						revel.WARN.Printf("Got error \"%v\" while parsing {%v}", er.Error(), rawRecord)
+						return
 					}
 
-					if err != nil {
-						break
+					for _,historyRecord := range historyRecords {
+						historyRecordFilter := historyRecord
+						historyRecordFilter.RawValue       = 0
+						historyRecordFilter.ConvertedValue = 0
+						historyRecordOld,er := models.HistoryRecord.First(historyRecordFilter)
+						err = er
+
+						if err != nil {
+							if err == reform.ErrNoRows {
+								revel.TRACE.Printf("historyRecord.Insert()")
+								historyRecord.Counter = 1
+								err = historyRecord.Insert()
+							}
+						} else {
+							if (historyRecord.ConvertedValue < models.MIN_CONVERTED_VALUE) {
+								revel.INFO.Printf("skipped: historyRecordOld.Update(): SensorId: %v(%v); %v < %v: %v (%v)", historyRecord.SensorId, rawRecord.RawSensorId, historyRecord.ConvertedValue, models.MIN_CONVERTED_VALUE, historyRecord, rawRecord)
+								continue
+							}
+							historyRecordOld.Merge(historyRecord)
+							revel.TRACE.Printf("historyRecordOld.Update()")
+							err = historyRecordOld.Update()
+						}
+
+						if err != nil {
+							return
+						}
 					}
-				}
-				if err != nil {
-					revel.ERROR.Printf("Converter error: %v", err.Error())
-					continue
-				}
-				err = rawRecord.Delete()
-				if err != nil {
-					revel.ERROR.Printf("Converter error: %v", err.Error())
-				}
+					if err != nil {
+						revel.ERROR.Printf("Converter error: %v", err.Error())
+						return
+					}
+					err = rawRecord.Delete()
+					if err != nil {
+						revel.ERROR.Printf("Converter error: %v", err.Error())
+					}
+				}(rawRecordE);
 			}
 
 			time.Sleep(time.Second)
 		}
 	}()
+}
+
+func initCasClient() {
+	url, _ := url.Parse("https://login.mephi.ru")
+	CasClient = cas.NewClient(&cas.Options{
+		URL: url,
+	})
 }
 
 func init() {
@@ -107,13 +128,14 @@ func init() {
 		HeaderFilter,                  // Add some security based headers
 		revel.InterceptorFilter,       // Run interceptors around the action.
 		revel.CompressFilter,          // Compress the result.
-		revel.ActionInvoker,           // Invoke the action.
+		ActionInvoker,           // Invoke the action.
 	}
 
 	// register startup functions with OnAppStart
 	// ( order dependent )
 	revel.OnAppStart(initDB)
 	revel.OnAppStart(initRecordsConverted)
+	revel.OnAppStart(initCasClient)
 
 	revel.TemplateFuncs["dict"] = func(values ...interface{}) (map[string]interface{}, error) {	// This function is copied from http://stackoverflow.com/questions/18276173/calling-a-template-with-several-pipeline-parameters/18276968
 		if len(values)%2 != 0 {
@@ -143,12 +165,37 @@ func init() {
 					}
 				case reflect.Map:
 					r := v.MapIndex(reflect.ValueOf(idxI))
+					if (!r.IsValid()) {
+						return false
+					}
 					if r.Interface() == reflect.Zero(r.Type()).Interface() {
 						return false
 					}
 			}
 		}
 		return true
+	}
+
+	revel.TemplateFuncs["isNil"] = func(arg interface{}) (bool) {
+		switch arg.(type) {
+			case nil:
+				return true
+		}
+		v := reflect.ValueOf(arg)
+		t := v.Type().Kind()
+		switch (t) {
+			case reflect.Ptr:
+				return v.IsNil()
+		}
+		return false;
+	}
+
+	revel.TemplateFuncs["isEmpty"] = func(arg interface{}) (bool) {
+		value := reflect.ValueOf(arg)
+		if (!value.IsValid()) {
+			return true
+		}
+		return arg == reflect.Zero(reflect.TypeOf(arg)).Interface()
 	}
 }
 
@@ -157,9 +204,30 @@ func init() {
 // not sure if it can go in the same filter or not
 var HeaderFilter = func(c *revel.Controller, fc []revel.Filter) {
 	// Add some common security headers
-	c.Response.Out.Header().Add("X-Frame-Options", "SAMEORIGIN")
+	/*c.Response.Out.Header().Add("X-Frame-Options", "SAMEORIGIN")
 	c.Response.Out.Header().Add("X-XSS-Protection", "1; mode=block")
-	c.Response.Out.Header().Add("X-Content-Type-Options", "nosniff")
+	c.Response.Out.Header().Add("X-Content-Type-Options", "nosniff")*/
 
 	fc[0](c, fc[1:]) // Execute the next filter stage.
 }
+
+var ActionInvoker = func(c *revel.Controller, f []revel.Filter) {
+	isAuthed := false
+
+	h := func(w http.ResponseWriter, r *http.Request) {
+		if !cas.IsAuthenticated(r) {
+			CasClient.RedirectToLogin(w, r)
+			return
+		}
+
+		isAuthed = true
+	}
+
+	CasClient.HandleFunc(h).ServeHTTP(c.Response.Out, c.Request.Request)
+	if (!isAuthed) {
+		return
+	}
+
+	revel.ActionInvoker(c, f);
+}
+

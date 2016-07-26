@@ -15,8 +15,9 @@
 			$('#mobileDashboardLayout').addClass('unknown');
 		}
 	}
+	{{ if eq .mobileAutoupdate "true" }} autoupdatesToggle(); {{ end }}
 </script>
 
-{{template "Dashboard/_mobileDashboardLayout.html" dict "isMobile" true "sensors" .sensors}}
+{{template "Dashboard/_mobileDashboardLayout.html" dict "isMobile" true "sensors" .sensors "mobileAutoupdate" .mobileAutoupdate "mobileShowNames" .mobileShowNames}}
 
 {{template "footer.html" .}}

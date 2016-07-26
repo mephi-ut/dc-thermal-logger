@@ -6,6 +6,8 @@ import (
 	  "reflect"
 	  "os"
 	  "github.com/revel/revel"
+	  "strings"
+	  "encoding/base64"
 	  "net/http"
 	  "net/url"
 	  "database/sql"
@@ -211,19 +213,59 @@ var HeaderFilter = func(c *revel.Controller, fc []revel.Filter) {
 	fc[0](c, fc[1:]) // Execute the next filter stage.
 }
 
-var ActionInvoker = func(c *revel.Controller, f []revel.Filter) {
-	isAuthed := false
+func checkAuth(w http.ResponseWriter, r *http.Request) bool {
+	s := strings.SplitN(r.Header.Get("Authorization"), " ", 2)
+	if len(s) != 2 { return false }
 
-	h := func(w http.ResponseWriter, r *http.Request) {
-		if !cas.IsAuthenticated(r) {
-			CasClient.RedirectToLogin(w, r)
-			return
-		}
+	b, err := base64.StdEncoding.DecodeString(s[1])
+	if err != nil { return false }
 
-		isAuthed = true
+	pair := strings.SplitN(string(b), ":", 2)
+	if len(pair) != 2 { return false }
+
+	if pair[0] == "" || pair[1] == "" {
+		return false
 	}
 
-	CasClient.HandleFunc(h).ServeHTTP(c.Response.Out, c.Request.Request)
+	if pair[0] == revel.Config.StringDefault("user0.login", "") && pair[1] == revel.Config.StringDefault("user0.pass", "") {
+		return true
+	}
+
+	if pair[0] == revel.Config.StringDefault("user1.login", "") && pair[1] == revel.Config.StringDefault("user1.pass", "") {
+		return true
+	}
+
+	if pair[0] == revel.Config.StringDefault("user2.login", "") && pair[1] == revel.Config.StringDefault("user2.pass", "") {
+		return true
+	}
+
+	if pair[0] == revel.Config.StringDefault("user3.login", "") && pair[1] == revel.Config.StringDefault("user3.pass", "") {
+		return true
+	}
+
+	if pair[0] == revel.Config.StringDefault("user4.login", "") && pair[1] == revel.Config.StringDefault("user4.pass", "") {
+		return true
+	}
+
+	return false
+}
+
+var ActionInvoker = func(c *revel.Controller, f []revel.Filter) {
+	isAuthed := checkAuth(c.Response.Out, c.Request.Request)
+
+	if (!isAuthed) {
+		h := func(w http.ResponseWriter, r *http.Request) {
+			if !cas.IsAuthenticated(r) {
+				CasClient.RedirectToLogin(w, r)
+				return
+			}
+
+			isAuthed = true
+		}
+
+		CasClient.HandleFunc(h).ServeHTTP(c.Response.Out, c.Request.Request)
+	}
+
 	if (!isAuthed) {
 		return
 	}

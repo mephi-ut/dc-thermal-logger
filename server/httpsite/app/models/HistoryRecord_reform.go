@@ -6,15 +6,11 @@ import (
 	"fmt"
 	"reflect"
 	"strings"
+	"time"
 
 	"gopkg.in/reform.v1"
 	"gopkg.in/reform.v1/parse"
 )
-
-type historyRecordTableType struct {
-	s parse.StructInfo
-	z []interface{}
-}
 
 type historyRecordScope struct {
 	historyRecord
@@ -23,11 +19,28 @@ type historyRecordScope struct {
 	where [][]interface{}
 	order []string
 	limit int
+
+	loggingEnabled bool
+	loggingAuthor  *string
+	loggingComment string
 }
 
 type HistoryRecordFilter historyRecord
 
+type historyRecordLogRow struct {
+	historyRecord
+	LogAuthor  *string
+	LogAction  string
+	LogDate    time.Time
+	LogComment string
+}
+
 // Schema returns a schema name in SQL database ("").
+type historyRecordTableType struct {
+	s parse.StructInfo
+	z []interface{}
+}
+
 func (v *historyRecordTableType) Schema() string {
 	return v.s.SQLSchema
 }
@@ -67,6 +80,44 @@ var historyRecordTable = &historyRecordTableType{
 	z: new(historyRecord).Values(),
 }
 
+type historyRecordTableType_log struct {
+	s parse.StructInfo
+	z []interface{}
+}
+
+func (v *historyRecordTableType_log) Schema() string {
+	return v.s.SQLSchema
+}
+
+func (v *historyRecordTableType_log) Name() string {
+	return v.s.SQLName
+}
+
+func (v *historyRecordTableType_log) Columns() []string {
+	return []string{"id", "date", "aggregation_period", "sensor_id", "raw_value", "converted_value", "counter", "log_author", "log_action", "log_date", "log_comment"}
+}
+
+func (v *historyRecordTableType_log) NewStruct() reform.Struct {
+	return new(historyRecord)
+}
+
+func (v *historyRecordTableType_log) NewRecord() reform.Record {
+	return new(historyRecord)
+}
+
+func (v *historyRecordTableType_log) NewScope() *historyRecordScope {
+	return &historyRecordScope{}
+}
+
+func (v *historyRecordTableType_log) PKColumnIndex() uint {
+	return uint(v.s.PKFieldIndex)
+}
+
+var historyRecordTableLogRow = &historyRecordTableType_log{
+	s: parse.StructInfo{Type: "historyRecord", SQLSchema: "", SQLName: "history_records_log", Fields: []parse.FieldInfo{{Name: "Id", Type: "int", Column: "id"}, {Name: "Date", Type: "MyTime", Column: "date"}, {Name: "AggregationType", Type: "AggregationType", Column: "aggregation_period"}, {Name: "SensorId", Type: "int", Column: "sensor_id"}, {Name: "RawValue", Type: "float32", Column: "raw_value"}, {Name: "ConvertedValue", Type: "float32", Column: "converted_value"}, {Name: "Counter", Type: "int", Column: "counter"}, {Name: "LogAuthor", Type: "*string", Column: "log_author"}, {Name: "LogAction", Type: "string", Column: "log_action"}, {Name: "LogDate", Type: "time.Time", Column: "log_date"}, {Name: "LogComment", Type: "string", Column: "log_comment"}}, PKFieldIndex: 0},
+	z: new(historyRecordLogRow).Values(),
+}
+
 // String returns a string representation of this struct or record.
 func (s historyRecord) String() string {
 	res := make([]string, 7)
@@ -77,6 +128,21 @@ func (s historyRecord) String() string {
 	res[4] = "RawValue: " + reform.Inspect(s.RawValue, true)
 	res[5] = "ConvertedValue: " + reform.Inspect(s.ConvertedValue, true)
 	res[6] = "Counter: " + reform.Inspect(s.Counter, true)
+	return strings.Join(res, ", ")
+}
+func (s historyRecordLogRow) String() string {
+	res := make([]string, 11)
+	res[0] = "Id: " + reform.Inspect(s.Id, true)
+	res[1] = "Date: " + reform.Inspect(s.Date, true)
+	res[2] = "AggregationType: " + reform.Inspect(s.AggregationType, true)
+	res[3] = "SensorId: " + reform.Inspect(s.SensorId, true)
+	res[4] = "RawValue: " + reform.Inspect(s.RawValue, true)
+	res[5] = "ConvertedValue: " + reform.Inspect(s.ConvertedValue, true)
+	res[6] = "Counter: " + reform.Inspect(s.Counter, true)
+	res[7] = "LogAuthor: " + reform.Inspect(s.LogAuthor, true)
+	res[8] = "LogAction: " + reform.Inspect(s.LogAction, true)
+	res[9] = "LogDate: " + reform.Inspect(s.LogDate, true)
+	res[10] = "LogComment: " + reform.Inspect(s.LogComment, true)
 	return strings.Join(res, ", ")
 }
 
@@ -93,6 +159,14 @@ func (s *historyRecord) Values() []interface{} {
 		s.Counter,
 	}
 }
+func (s *historyRecordLogRow) Values() []interface{} {
+	return append(s.historyRecord.Values(), []interface{}{
+		s.LogAuthor,
+		s.LogAction,
+		s.LogDate,
+		s.LogComment,
+	}...)
+}
 
 // Pointers returns a slice of pointers to struct or record fields.
 // Returned interface{} values are never untyped nils.
@@ -107,10 +181,21 @@ func (s *historyRecord) Pointers() []interface{} {
 		&s.Counter,
 	}
 }
+func (s *historyRecordLogRow) Pointers() []interface{} {
+	return append(s.historyRecord.Pointers(), []interface{}{
+		&s.LogAuthor,
+		&s.LogAction,
+		&s.LogDate,
+		&s.LogComment,
+	}...)
+}
 
 // View returns View object for that struct.
 func (s *historyRecord) View() reform.View {
 	return historyRecordTable
+}
+func (s *historyRecordLogRow) View() reform.View {
+	return historyRecordTableLogRow
 }
 
 // Generate a scope for object
@@ -181,12 +266,19 @@ func (s *historyRecordScope) getWhereTailForFilter(filter HistoryRecordFilter) (
 		f := v.Field(i)
 		fT := f.Type()
 
-		if f.Interface() == reflect.Zero(fT).Interface() {
-			continue
+		switch fT.Kind() {
+		case reflect.Array, reflect.Slice, reflect.Map:
+			if reflect.DeepEqual(f.Interface(), reflect.Zero(fT).Interface()) {
+				continue
+			}
+		default:
+			if f.Interface() == reflect.Zero(fT).Interface() {
+				continue
+			}
 		}
 
 		vs := vT.Field(i)
-		rN := vs.Tag.Get("reform")
+		rN := strings.Split(vs.Tag.Get("reform"), ",")[0]
 
 		placeholderCounter++
 		whereTailStringParts = append(whereTailStringParts, rN+" = "+s.db.Dialect.Placeholder(placeholderCounter)) // TODO: escape field name
@@ -331,7 +423,7 @@ func (s *historyRecord) First(args ...interface{}) (result historyRecord, err er
 	return s.Scope().First(args...)
 }
 func (s *historyRecordScope) First(args ...interface{}) (result historyRecord, err error) {
-	tail, args, err := s.Where(args...).getTail()
+	tail, args, err := s.Limit(1).Where(args...).getTail()
 	if err != nil {
 		return
 	}
@@ -383,29 +475,78 @@ func (s *historyRecord) Reload(db *reform.DB) (err error) {
 // Create and Insert inserts new record to DB
 func (s *historyRecord) Create() (err error) { return s.Scope().Create() }
 func (s *historyRecordScope) Create() (err error) {
-	return s.db.Insert(s)
+	err = s.db.Insert(s)
+	if err == nil {
+		s.doLog("INSERT")
+	}
+	return err
 }
 func (s *historyRecord) Insert() (err error) { return s.Scope().Insert() }
 func (s *historyRecordScope) Insert() (err error) {
-	return s.db.Insert(s)
+	err = s.db.Insert(s)
+	if err == nil {
+		s.doLog("INSERT")
+	}
+	return err
 }
 
 // Save inserts new record to DB is PK is zero and updates existing record if PK is not zero
 func (s *historyRecord) Save() (err error) { return s.Scope().Save() }
 func (s *historyRecordScope) Save() (err error) {
-	return s.db.Save(s)
+	err = s.db.Save(s)
+	if err == nil {
+		s.doLog("INSERT")
+	}
+	return err
 }
 
 // Update updates existing record in DB
 func (s *historyRecord) Update() (err error) { return s.Scope().Update() }
 func (s *historyRecordScope) Update() (err error) {
-	return s.db.Update(s)
+	err = s.db.Update(s)
+	if err == nil {
+		s.doLog("UPDATE")
+	}
+	return err
 }
 
 // Delete deletes existing record in DB
 func (s *historyRecord) Delete() (err error) { return s.Scope().Delete() }
 func (s *historyRecordScope) Delete() (err error) {
-	return s.db.Delete(s)
+	err = s.db.Delete(s)
+	if err == nil {
+		s.doLog("DELETE")
+	}
+	return err
+}
+
+func (s *historyRecordScope) doLog(requestType string) {
+	if !s.loggingEnabled {
+		return
+	}
+
+	var logRow historyRecordLogRow
+	logRow.historyRecord = s.historyRecord
+	logRow.LogAuthor = s.loggingAuthor
+	logRow.LogAction = requestType
+	logRow.LogDate = time.Now()
+	logRow.LogComment = s.loggingComment
+
+	s.db.Insert(&logRow)
+}
+
+// Enables logging to table "history_records_log". This table should has the same schema, except:
+// - Unique/Primary keys should be removed
+// - Should be added next fields: "log_author" (nullable string), "log_date" (timestamp), "log_action" (enum("INSERT", "UPDATE", "DELETE")), "log_comment" (string)
+func (s *historyRecord) Log(enableLogging bool, author *string, commentFormat string, commentArgs ...interface{}) (scope *historyRecordScope) {
+	return s.Scope().Log(enableLogging, author, commentFormat, commentArgs...)
+}
+func (s *historyRecordScope) Log(enableLogging bool, author *string, commentFormat string, commentArgs ...interface{}) (scope *historyRecordScope) {
+	s.loggingEnabled = enableLogging
+	s.loggingAuthor = author
+	s.loggingComment = fmt.Sprintf(commentFormat, commentArgs...)
+
+	return s
 }
 
 // Table returns Table object for that record.
@@ -454,5 +595,5 @@ var (
 )
 
 func init() {
-	parse.AssertUpToDate(&historyRecordTable.s, new(historyRecord))
+	//parse.AssertUpToDate(&historyRecordTable.s, new(historyRecord)) // Temporary disabled (doesn't work with arbitary types like "type sliceString []string")
 }

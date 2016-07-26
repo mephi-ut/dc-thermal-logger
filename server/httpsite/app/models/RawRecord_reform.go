@@ -6,15 +6,11 @@ import (
 	"fmt"
 	"reflect"
 	"strings"
+	"time"
 
 	"gopkg.in/reform.v1"
 	"gopkg.in/reform.v1/parse"
 )
-
-type rawRecordTableType struct {
-	s parse.StructInfo
-	z []interface{}
-}
 
 type rawRecordScope struct {
 	rawRecord
@@ -23,11 +19,28 @@ type rawRecordScope struct {
 	where [][]interface{}
 	order []string
 	limit int
+
+	loggingEnabled bool
+	loggingAuthor  *string
+	loggingComment string
 }
 
 type RawRecordFilter rawRecord
 
+type rawRecordLogRow struct {
+	rawRecord
+	LogAuthor  *string
+	LogAction  string
+	LogDate    time.Time
+	LogComment string
+}
+
 // Schema returns a schema name in SQL database ("").
+type rawRecordTableType struct {
+	s parse.StructInfo
+	z []interface{}
+}
+
 func (v *rawRecordTableType) Schema() string {
 	return v.s.SQLSchema
 }
@@ -67,6 +80,44 @@ var rawRecordTable = &rawRecordTableType{
 	z: new(rawRecord).Values(),
 }
 
+type rawRecordTableType_log struct {
+	s parse.StructInfo
+	z []interface{}
+}
+
+func (v *rawRecordTableType_log) Schema() string {
+	return v.s.SQLSchema
+}
+
+func (v *rawRecordTableType_log) Name() string {
+	return v.s.SQLName
+}
+
+func (v *rawRecordTableType_log) Columns() []string {
+	return []string{"id", "date", "raw_sensor_id", "raw_channel_id", "raw_value", "log_author", "log_action", "log_date", "log_comment"}
+}
+
+func (v *rawRecordTableType_log) NewStruct() reform.Struct {
+	return new(rawRecord)
+}
+
+func (v *rawRecordTableType_log) NewRecord() reform.Record {
+	return new(rawRecord)
+}
+
+func (v *rawRecordTableType_log) NewScope() *rawRecordScope {
+	return &rawRecordScope{}
+}
+
+func (v *rawRecordTableType_log) PKColumnIndex() uint {
+	return uint(v.s.PKFieldIndex)
+}
+
+var rawRecordTableLogRow = &rawRecordTableType_log{
+	s: parse.StructInfo{Type: "rawRecord", SQLSchema: "", SQLName: "raw_records_log", Fields: []parse.FieldInfo{{Name: "Id", Type: "int", Column: "id"}, {Name: "Date", Type: "time.Time", Column: "date"}, {Name: "RawSensorId", Type: "int", Column: "raw_sensor_id"}, {Name: "RawChannelId", Type: "int", Column: "raw_channel_id"}, {Name: "RawValue", Type: "int", Column: "raw_value"}, {Name: "LogAuthor", Type: "*string", Column: "log_author"}, {Name: "LogAction", Type: "string", Column: "log_action"}, {Name: "LogDate", Type: "time.Time", Column: "log_date"}, {Name: "LogComment", Type: "string", Column: "log_comment"}}, PKFieldIndex: 0},
+	z: new(rawRecordLogRow).Values(),
+}
+
 // String returns a string representation of this struct or record.
 func (s rawRecord) String() string {
 	res := make([]string, 5)
@@ -75,6 +126,19 @@ func (s rawRecord) String() string {
 	res[2] = "RawSensorId: " + reform.Inspect(s.RawSensorId, true)
 	res[3] = "RawChannelId: " + reform.Inspect(s.RawChannelId, true)
 	res[4] = "RawValue: " + reform.Inspect(s.RawValue, true)
+	return strings.Join(res, ", ")
+}
+func (s rawRecordLogRow) String() string {
+	res := make([]string, 9)
+	res[0] = "Id: " + reform.Inspect(s.Id, true)
+	res[1] = "Date: " + reform.Inspect(s.Date, true)
+	res[2] = "RawSensorId: " + reform.Inspect(s.RawSensorId, true)
+	res[3] = "RawChannelId: " + reform.Inspect(s.RawChannelId, true)
+	res[4] = "RawValue: " + reform.Inspect(s.RawValue, true)
+	res[5] = "LogAuthor: " + reform.Inspect(s.LogAuthor, true)
+	res[6] = "LogAction: " + reform.Inspect(s.LogAction, true)
+	res[7] = "LogDate: " + reform.Inspect(s.LogDate, true)
+	res[8] = "LogComment: " + reform.Inspect(s.LogComment, true)
 	return strings.Join(res, ", ")
 }
 
@@ -89,6 +153,14 @@ func (s *rawRecord) Values() []interface{} {
 		s.RawValue,
 	}
 }
+func (s *rawRecordLogRow) Values() []interface{} {
+	return append(s.rawRecord.Values(), []interface{}{
+		s.LogAuthor,
+		s.LogAction,
+		s.LogDate,
+		s.LogComment,
+	}...)
+}
 
 // Pointers returns a slice of pointers to struct or record fields.
 // Returned interface{} values are never untyped nils.
@@ -101,10 +173,21 @@ func (s *rawRecord) Pointers() []interface{} {
 		&s.RawValue,
 	}
 }
+func (s *rawRecordLogRow) Pointers() []interface{} {
+	return append(s.rawRecord.Pointers(), []interface{}{
+		&s.LogAuthor,
+		&s.LogAction,
+		&s.LogDate,
+		&s.LogComment,
+	}...)
+}
 
 // View returns View object for that struct.
 func (s *rawRecord) View() reform.View {
 	return rawRecordTable
+}
+func (s *rawRecordLogRow) View() reform.View {
+	return rawRecordTableLogRow
 }
 
 // Generate a scope for object
@@ -175,12 +258,19 @@ func (s *rawRecordScope) getWhereTailForFilter(filter RawRecordFilter) (tail str
 		f := v.Field(i)
 		fT := f.Type()
 
-		if f.Interface() == reflect.Zero(fT).Interface() {
-			continue
+		switch fT.Kind() {
+		case reflect.Array, reflect.Slice, reflect.Map:
+			if reflect.DeepEqual(f.Interface(), reflect.Zero(fT).Interface()) {
+				continue
+			}
+		default:
+			if f.Interface() == reflect.Zero(fT).Interface() {
+				continue
+			}
 		}
 
 		vs := vT.Field(i)
-		rN := vs.Tag.Get("reform")
+		rN := strings.Split(vs.Tag.Get("reform"), ",")[0]
 
 		placeholderCounter++
 		whereTailStringParts = append(whereTailStringParts, rN+" = "+s.db.Dialect.Placeholder(placeholderCounter)) // TODO: escape field name
@@ -325,7 +415,7 @@ func (s *rawRecord) First(args ...interface{}) (result rawRecord, err error) {
 	return s.Scope().First(args...)
 }
 func (s *rawRecordScope) First(args ...interface{}) (result rawRecord, err error) {
-	tail, args, err := s.Where(args...).getTail()
+	tail, args, err := s.Limit(1).Where(args...).getTail()
 	if err != nil {
 		return
 	}
@@ -377,29 +467,78 @@ func (s *rawRecord) Reload(db *reform.DB) (err error) {
 // Create and Insert inserts new record to DB
 func (s *rawRecord) Create() (err error) { return s.Scope().Create() }
 func (s *rawRecordScope) Create() (err error) {
-	return s.db.Insert(s)
+	err = s.db.Insert(s)
+	if err == nil {
+		s.doLog("INSERT")
+	}
+	return err
 }
 func (s *rawRecord) Insert() (err error) { return s.Scope().Insert() }
 func (s *rawRecordScope) Insert() (err error) {
-	return s.db.Insert(s)
+	err = s.db.Insert(s)
+	if err == nil {
+		s.doLog("INSERT")
+	}
+	return err
 }
 
 // Save inserts new record to DB is PK is zero and updates existing record if PK is not zero
 func (s *rawRecord) Save() (err error) { return s.Scope().Save() }
 func (s *rawRecordScope) Save() (err error) {
-	return s.db.Save(s)
+	err = s.db.Save(s)
+	if err == nil {
+		s.doLog("INSERT")
+	}
+	return err
 }
 
 // Update updates existing record in DB
 func (s *rawRecord) Update() (err error) { return s.Scope().Update() }
 func (s *rawRecordScope) Update() (err error) {
-	return s.db.Update(s)
+	err = s.db.Update(s)
+	if err == nil {
+		s.doLog("UPDATE")
+	}
+	return err
 }
 
 // Delete deletes existing record in DB
 func (s *rawRecord) Delete() (err error) { return s.Scope().Delete() }
 func (s *rawRecordScope) Delete() (err error) {
-	return s.db.Delete(s)
+	err = s.db.Delete(s)
+	if err == nil {
+		s.doLog("DELETE")
+	}
+	return err
+}
+
+func (s *rawRecordScope) doLog(requestType string) {
+	if !s.loggingEnabled {
+		return
+	}
+
+	var logRow rawRecordLogRow
+	logRow.rawRecord = s.rawRecord
+	logRow.LogAuthor = s.loggingAuthor
+	logRow.LogAction = requestType
+	logRow.LogDate = time.Now()
+	logRow.LogComment = s.loggingComment
+
+	s.db.Insert(&logRow)
+}
+
+// Enables logging to table "raw_records_log". This table should has the same schema, except:
+// - Unique/Primary keys should be removed
+// - Should be added next fields: "log_author" (nullable string), "log_date" (timestamp), "log_action" (enum("INSERT", "UPDATE", "DELETE")), "log_comment" (string)
+func (s *rawRecord) Log(enableLogging bool, author *string, commentFormat string, commentArgs ...interface{}) (scope *rawRecordScope) {
+	return s.Scope().Log(enableLogging, author, commentFormat, commentArgs...)
+}
+func (s *rawRecordScope) Log(enableLogging bool, author *string, commentFormat string, commentArgs ...interface{}) (scope *rawRecordScope) {
+	s.loggingEnabled = enableLogging
+	s.loggingAuthor = author
+	s.loggingComment = fmt.Sprintf(commentFormat, commentArgs...)
+
+	return s
 }
 
 // Table returns Table object for that record.
@@ -448,5 +587,5 @@ var (
 )
 
 func init() {
-	parse.AssertUpToDate(&rawRecordTable.s, new(rawRecord))
+	//parse.AssertUpToDate(&rawRecordTable.s, new(rawRecord)) // Temporary disabled (doesn't work with arbitary types like "type sliceString []string")
 }

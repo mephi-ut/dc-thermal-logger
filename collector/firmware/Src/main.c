@@ -41,7 +41,7 @@
 
 #define PROC_PRESCALER	5
 
-#define SENSORS		2
+#define SENSORS		16
 #define MAX_CHANNELS	16
 
 #define NET_BUF_SIZE (1<<10)
@@ -249,9 +249,9 @@ int main(void)
 	}
 #endif
 
-	uint8_t   local_mac[] = {0x02, 0x03, 0x04, 0x05, 0x06, 0x08};
+	uint8_t   local_mac[] = {0x02, 0x03, 0x04, 0x05, 0x06, 0x09};
 	uint8_t  remote_mac[] = {0x00, 0x1b, 0x21, 0x39, 0x37, 0x26};
-	uint8_t   local_ip[]  = {10,  4, 33, 124};
+	uint8_t   local_ip[]  = {10,  4, 33, 126};
 	uint8_t  remote_ip[]  = {10,  4, 33, 242};
 
 	ES_enc28j60SpiInit(&hspi1);
@@ -267,18 +267,18 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-	/* // ICMP echo server
-	while (1)
+	// ICMP echo server
+	/*while (1)
 	{
-		packetloop_icmp_udp(net_buf, ES_enc28j60PacketReceive(NET_BUF_SIZE, net_buf));
+		packetloop_icmp_udp(net_sendbuf, ES_enc28j60PacketReceive(NET_BUF_SIZE, net_sendbuf));
 	}*/
 
 	uint8_t awaitingForSending = 0;
 	dataitem_t *net_senddata = (dataitem_t *)(&net_sendbuf[NET_HEADERS_LENGTH]);
+	dataitem_t channels = 0;
 
 	while (1)
 	{
-		dataitem_t channels;
 
 		if (awaitingForSending) {
 			GPIOB->BSRR = LED_NETSEND_Pin;
@@ -287,6 +287,7 @@ int main(void)
 			awaitingForSending = 0;
 		}
 		packetloop_icmp_udp(net_recvbuf, ES_enc28j60PacketReceive(NET_BUF_SIZE, net_recvbuf));
+		//continue;
 
 		{
 			static uint8_t  awaitingForReceive = 0;

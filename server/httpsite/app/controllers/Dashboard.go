@@ -46,10 +46,12 @@ var groups = map[string]groupInfo {
 		"ServerRack0":		groupInfo{DefaultSensorId: 81,	SensorIds: []int{ 80,  82,  81 }},
 		"ServerRack6":		groupInfo{DefaultSensorId: 89,	SensorIds: []int{ 89,  88,  90 }},
 		"ServerRack7":		groupInfo{DefaultSensorId: 93,	SensorIds: []int{ 93,  91,  92 }},
-		"ServerRack8":		groupInfo{DefaultSensorId: 98,	SensorIds: []int{ 98,  97,  96 }},
-		"ServerRack9":		groupInfo{DefaultSensorId: 101,	SensorIds: []int{ 99,  101, 100 }},
+		"ServerRack8":		groupInfo{DefaultSensorId: 99,	SensorIds: []int{ 100, 99,  101 }},
+		"ServerRack9":		groupInfo{DefaultSensorId: 97,	SensorIds: []int{ 100, 97,  96  }},
 		"ServerRack10":		groupInfo{DefaultSensorId: 106,	SensorIds: []int{ 106, 105, 104 }},
 		"ServerRack11":		groupInfo{DefaultSensorId: 109,	SensorIds: []int{ 109, 108, 107 }},
+		"ServerRack13":		groupInfo{DefaultSensorId: 112,	SensorIds: []int{ 112, 113, 114 }},
+		"ServerRack14":		groupInfo{DefaultSensorId: 118,	SensorIds: []int{ 116, 118, 117 }},
 	}
 
 func (c Dashboard) get(key, defaultValue string) (result string) {
@@ -77,7 +79,7 @@ func (c Dashboard) page() {
 	sem := make(chan bool, 16)
 	for groupName,grpInfo := range groups {
 		sem <- true
-		go func(groupInfo groupInfo) {
+		go func(groupName string, groupInfo groupInfo) {
 			defer func() { <-sem }()
 			for _,sensorId := range groupInfo.SensorIds {
 				sensor := sensorInfo{}
@@ -104,7 +106,7 @@ func (c Dashboard) page() {
 				sensors[sensorId] = sensor
 				mutex.Unlock()
 			}
-		}(grpInfo);
+		}(groupName, grpInfo);
 	}
 	for i := 0; i < cap(sem); i++ {
 		sem <- true
@@ -159,6 +161,16 @@ func (c Dashboard) TSJson() revel.Result {
 }
 
 func (c Dashboard) MapHtml() revel.Result {
+	c.page()
+	return c.Render()
+}
+
+func (c Dashboard) MapMainDCHtml() revel.Result {
+	c.page()
+	return c.Render()
+}
+
+func (c Dashboard) MapReserveDCHtml() revel.Result {
 	c.page()
 	return c.Render()
 }

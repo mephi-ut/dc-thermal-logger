@@ -9,6 +9,8 @@ GET	/logout					App.Logout
 GET	/m					Dashboard.Minimal
 GET	/m.json					Dashboard.MinimalJson
 GET	/Map.html				Dashboard.MapHtml
+GET	/Map/ReserveDC.html			Dashboard.MapReserveDCHtml
+GET	/Map/MainDC.html			Dashboard.MapMainDCHtml
 GET     /Index                                  Dashboard.Page
 GET     /Index.json                             Dashboard.PageJson
 GET	/Status.json				Dashboard.PageJson

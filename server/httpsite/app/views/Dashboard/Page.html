@@ -169,9 +169,30 @@
 		$.ajax({
 			cache:		false,
 			dataType:	'html',
-			url:		'/Map.html',
+			url:		'/Map/MainDC.html',
 			success:	function(data){
-				$('#mapContainer').html(data);
+				$('#main-dc').html(data);
+			},
+		});
+		$.ajax({
+			cache:		false,
+			dataType:	'html',
+			url:		'/Map/ReserveDC.html',
+			success:	function(data){
+				$('#reserve-dc').html(data);
+			},
+		});
+	}
+
+	function updateSensorsInfo() {
+		$.ajax({
+			cache:		false,
+			dataType:	'json',
+			url:		'/Status.json',
+			success:	function(data){
+				groups  = data.groups;
+				sensors = data.sensors;
+				updateSensorsList();
 			},
 		});
 	}
@@ -216,24 +237,41 @@
 		setInterval(function() {
 			updateMap();
 		}, 5000);
+
+		setInterval(function() {
+			updateSensorsInfo();
+		}, 5000);
+	}
+
+	var currentSensorsGroup = null;
+
+	function updateSensorsList() {
+		var container = $('#sensors ul');
+
+		container.html('');
+
+		if (currentSensorsGroup == null) {
+			return;
+		}
+
+		for (var i = 0; i < currentSensorsGroup.SensorIds.length; i++) {
+			var sensorId = currentSensorsGroup.SensorIds[i];
+			var sensor   = sensors[sensorId];
+			if (sensor == null) {
+				continue;
+			}
+			container.append("<li><a href='#' onclick='selectSensor("+sensorId+")'>"+sensor.Name+" ("+sensor.Value+")</a></li>");
+		}
 	}
 
 	function selectSensorsGroup(groupName) {
 		window.location='/#selectSensorsGroup='+groupName;
 
-		var group = groups[groupName];
+		currentSensorsGroup = groups[groupName];
 
-		var container = $('#sensors ul');
+		updateSensorsList();
 
-		container.html('');
-
-		for (var i = 0; i < group.SensorIds.length; i++) {
-			var sensorId = group.SensorIds[i];
-			var sensor   = sensors[sensorId];
-			container.append("<li><a href='#' onclick='selectSensor("+sensorId+")'>"+sensor.Name+" ("+sensor.Value+")</a></li>");
-		}
-
-		selectSensor(group.DefaultSensorId);
+		selectSensor(currentSensorsGroup.DefaultSensorId);
 	}
 
 	var chartPrevRequest = null

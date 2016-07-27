@@ -45,13 +45,13 @@ main {
 	margin:		0;
 }
 
-#map2d {
+#map2d, .map2d {
 	color:		#fff;
 	font-size:	20px;
 	/*margin:		0 20px 0 20px;*/
 }
 
-#map2d td div {
+#map2d td div, .map2d td div {
 	height:		90px;
 	width:		90px;
 	border:		1px dotted #444;
@@ -202,5 +202,9 @@ div#mobileDashboardLayout.unknown {
 		height:			100%;
 		z-index:		-1;
 	}
+}
+
+#reserve-dc {
+	display:	none;
 }
 

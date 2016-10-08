@@ -21,6 +21,15 @@ func (c HistoryRecords) Find(historyRecord models.HistoryRecordFilter, order str
 		scope  = scope.Where("sensor_id IN (1,2,3)")
 		limit *= 3
 	}
+	if (historyRecord.SensorId == -1) {
+		scope  = scope.Where("sensor_id  < 32")
+	}
+	if (historyRecord.SensorId == -2) {
+		scope  = scope.Where("sensor_id >= 32")
+	}
+	if (historyRecord.SensorId < 0) {
+		historyRecord.SensorId = 0
+	}
 
 	historyRecords,err := scope.Limit(limit).Select(historyRecord)
 	if err != nil {

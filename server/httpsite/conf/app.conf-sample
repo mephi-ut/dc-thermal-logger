@@ -18,7 +18,9 @@ app.secret = B0mExtxtMyjT1CFf0RW2tNVlv8eO5Xx5DDjgXbWRoKIlr6d2DhPUNwBz9er0CrfT
 # Revel running behind proxy like nginx, haproxy, etc
 app.behind.proxy = false
 
-app.db_url=postgres://user:password@localhost/sensors
+#app.db_url=postgres://user:password@localhost/sensors
+#app.db_url=mysql://user:password@localhost/sensors
+app.db_url=user:password@/sensors?charset=utf8&parseTime=true
 
 # The IP address on which to listen.
 http.addr =

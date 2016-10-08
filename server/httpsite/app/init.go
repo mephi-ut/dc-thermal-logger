@@ -12,9 +12,11 @@ import (
 	  "net/url"
 	  "database/sql"
 	  "gopkg.in/reform.v1"
-	  "gopkg.in/reform.v1/dialects/postgresql"
+	//"gopkg.in/reform.v1/dialects/postgresql"
+	  "gopkg.in/reform.v1/dialects/mysql"
 	  "devel.mephi.ru/dyokunev/dc-thermal-logger/server/httpsite/app/models"
-	_ "github.com/lib/pq"
+	//_ "github.com/lib/pq"
+	_ "github.com/go-sql-driver/mysql"
 	  "gopkg.in/cas.v1"
 )
 
@@ -22,22 +24,24 @@ var DB *reform.DB
 var CasClient *cas.Client
 
 func initDB() {
-	simpleDB, err := sql.Open("postgres", revel.Config.StringDefault("app.db_url", "postgres://localhost/sensors"))
+	//simpleDB, err := sql.Open("postgres", revel.Config.StringDefault("app.db_url", "postgres://localhost/sensors"))
+	simpleDB, err := sql.Open("mysql", revel.Config.StringDefault("app.db_url", "mysql://localhost/sensors"))
 	if (err != nil) {
 		revel.ERROR.Printf("Cannot connect to DB: %s", err.Error())
 		os.Exit(-1)
 	}
 
-	DB = reform.NewDB(simpleDB, postgresql.Dialect, reform.NewPrintfLogger(revel.TRACE.Printf))
+	//DB = reform.NewDB(simpleDB, postgresql.Dialect, reform.NewPrintfLogger(revel.TRACE.Printf))
+	DB = reform.NewDB(simpleDB, mysql.Dialect, reform.NewPrintfLogger(revel.TRACE.Printf))
 
 	models.HistoryRecord.SetDefaultDB(DB)
 	models.RawRecord.SetDefaultDB(DB)
 }
 
 func initRecordsConverted() {
-	if revel.DevMode {	// Don't corrupt data
+/*	if revel.DevMode {	// Don't corrupt data
 		return
-	}
+	}*/
 
 	go func() {
 		for ;; {

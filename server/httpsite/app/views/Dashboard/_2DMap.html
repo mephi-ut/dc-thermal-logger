@@ -1,6 +1,6 @@
 &nbsp;
-<input id='radio-main-dc'    name='dc-select' type='radio' checked onclick='$("#main-dc").css("display","block");$("#reserve-dc").css("display","none") '><label for='radio-main-dc'> основной ЦОД </label> |
-<input id='radio-reserve-dc' name='dc-select' type='radio'         onclick='$("#main-dc").css("display","none"); $("#reserve-dc").css("display","block")'><label for='radio-reserve-dc'> резервный ЦОД </label>
+<input id='radio-main-dc'    name='dc-select' type='radio' checked onclick='$("#main-dc").css("display","block");$("#reserve-dc").css("display","none") '><label for='radio-main-dc'> основной ЦОД </label><!-- (<a href="#">все датчики</a>)--> |
+<input id='radio-reserve-dc' name='dc-select' type='radio'         onclick='$("#main-dc").css("display","none"); $("#reserve-dc").css("display","block")'><label for='radio-reserve-dc'> резервный ЦОД </label><!-- (<a href="#">все датчики</a>)-->
 <table id='main-dc' class='map2d'>
 	{{ template "Dashboard/_mainDC.html" . }}
 </table>

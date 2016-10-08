@@ -46,7 +46,7 @@ func initRecordsConverted() {
 	go func() {
 		for ;; {
 			revel.TRACE.Printf("Running converter iteration…")
-			rawRecords,err := models.RawRecord.Select()
+			rawRecords,err := models.RawRecord.Limit(100000).Select()
 			if (err != nil) {
 				revel.ERROR.Printf("Converter error: %v", err.Error())
 				continue

@@ -1,9 +1,10 @@
 [package]
 name = "dc_logger_parser"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Dmitry Yu Okunev <dyokunev@ut.mephi.ru>"]
 
 [dependencies]
 time = "0.1.35"
 dotenv = "0.8.0"
-postgres = "0.11.9"
+#postgres = "0.11.9"
+mysql = "*"

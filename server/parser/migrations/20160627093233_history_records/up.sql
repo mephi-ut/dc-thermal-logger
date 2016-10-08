@@ -11,7 +11,7 @@ CREATE TABLE history_records (
 	sensor_id	SMALLINT NOT NULL,
 	raw_value	REAL NOT NULL,
 	converted_value	REAL NOT NULL,
-	counter		SMALLINT DEFAULT 1
+	counter		INTEGER DEFAULT 1
 
 );
 

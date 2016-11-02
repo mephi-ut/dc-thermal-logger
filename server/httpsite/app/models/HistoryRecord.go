@@ -11,6 +11,7 @@ import (
 const (
 	AGGR_UNKNOWN AggregationType = iota
 	AGGR_SECOND
+	AGGR_10SECONDS
 	AGGR_MINUTE
 	AGGR_5MINUTES
 	AGGR_HOUR
@@ -62,7 +63,7 @@ func (t *MyTime) MarshalJSON() ([]byte, error) {
 	return []byte("\"" + t.Format("2006-01-02 15:04:05") + "\""), nil
 }
 
-var aggregationTypes = []AggregationType{AGGR_SECOND, AGGR_MINUTE, AGGR_5MINUTES, AGGR_HOUR, AGGR_DAY, AGGR_WEEK}
+var aggregationTypes = []AggregationType{AGGR_SECOND, AGGR_10SECONDS, AGGR_MINUTE, AGGR_5MINUTES, AGGR_HOUR, AGGR_DAY, AGGR_WEEK}
 var sensorIdMap = map[int]map[int]int{
 	1:  {0: 64, 1: 65, 2: 66, 3: 67, 4: 68, 5: 69, 6: 70, 7: 71},
 	2:  {0: 72, 1: 73, 2: 74, 3: 75, 4: 76, 5: 77, 6: 78, 7: 79},
@@ -317,6 +318,8 @@ func (t AggregationType) ToString() string {
 	switch t {
 	case AGGR_SECOND:
 		return "second"
+	case AGGR_10SECONDS:
+		return "10seconds"
 	case AGGR_MINUTE:
 		return "minute"
 	case AGGR_5MINUTES:
@@ -336,6 +339,8 @@ func (t *AggregationType) FromString(s string) {
 	switch s {
 	case "second":
 		*t = AGGR_SECOND
+	case "10seconds":
+		*t = AGGR_10SECONDS
 	case "minute":
 		*t = AGGR_MINUTE
 	case "5minutes":
@@ -375,6 +380,8 @@ func (r *historyRecord) FixDate() {
 	switch r.AggregationType {
 	case AGGR_SECOND:
 		divider = 1
+	case AGGR_10SECONDS:
+		divider = 10
 	case AGGR_MINUTE:
 		divider = 60
 	case AGGR_5MINUTES:
@@ -389,7 +396,7 @@ func (r *historyRecord) FixDate() {
 		panic(fmt.Errorf("This shouldn't happened"))
 	}
 
-	unixTS := r.Date.Unix()
+	unixTS := r.Date.Unix() - 3600*3 /* by unknown reason timezone do an offset somewhere in the code, compensating */
 	unixTS /= divider
 	unixTS *= divider
 	//unixTS += (divider / 2)

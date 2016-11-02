@@ -52,7 +52,7 @@ func initRecordsConverted() {
 				continue
 			}
 
-			sem := make(chan bool, 8)
+			sem := make(chan bool, 32)
 
 			for _,rawRecord := range rawRecords {
 				sem <- true

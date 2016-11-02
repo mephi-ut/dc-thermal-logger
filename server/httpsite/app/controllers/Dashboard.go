@@ -8,6 +8,7 @@ import (
 	"devel.mephi.ru/dyokunev/dc-thermal-logger/server/httpsite/app/models"
 //	"devel.mephi.ru/dyokunev/dc-thermal-logger/server/httpsite/app"
 	"github.com/revel/revel"
+	"github.com/revel/revel/cache"
 	"gopkg.in/reform.v1"
 //	"golang.org/x/net/websocket";
 )
@@ -73,9 +74,16 @@ func (c Dashboard) considerGetParameters() {
 }
 
 func (c Dashboard) page() {
-	mutex := sync.Mutex{}
+	c.RenderArgs["groups" ] = groups
 	sensors := map[int]sensorInfo{}
 
+	if err := cache.Get("sensors", &sensors); err == nil {
+		c.RenderArgs["sensors"] = sensors
+		c.considerGetParameters()
+		return;
+	}
+
+	mutex := sync.Mutex{}
 	sem := make(chan bool, 16)
 	for groupName,grpInfo := range groups {
 		sem <- true
@@ -111,9 +119,9 @@ func (c Dashboard) page() {
 	for i := 0; i < cap(sem); i++ {
 		sem <- true
 	}
+	go cache.Set("sensors", sensors, 10*time.Second)
 
 	c.RenderArgs["sensors"] = sensors
-	c.RenderArgs["groups" ] = groups
 	c.considerGetParameters()
 }
 

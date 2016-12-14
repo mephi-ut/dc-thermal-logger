@@ -4,6 +4,7 @@ import (
 	  "fmt"
 	  "time"
 	  "reflect"
+	  "math"
 	  "os"
 	  "github.com/revel/revel"
 	  "strings"
@@ -39,9 +40,9 @@ func initDB() {
 }
 
 func initRecordsConverted() {
-/*	if revel.DevMode {	// Don't corrupt data
+	if revel.DevMode {	// Don't corrupt data
 		return
-	}*/
+	}
 
 	go func() {
 		for ;; {
@@ -118,6 +119,21 @@ func initCasClient() {
 	CasClient = cas.NewClient(&cas.Options{
 		URL: url,
 	})
+}
+
+func toFloat64(i interface{}) (float64) {
+	switch v := i.(type) {
+		case int64:
+			return float64(v)
+		case int:
+			return float64(v)
+		case float32:
+			return float64(v)
+		case float64:
+			return v
+	}
+
+	return math.NaN()
 }
 
 func init() {
@@ -202,6 +218,12 @@ func init() {
 			return true
 		}
 		return arg == reflect.Zero(reflect.TypeOf(arg)).Interface()
+	}
+	revel.TemplateFuncs["flt"] = func(a, b interface{}) (bool) {
+		aV := toFloat64(a)
+		bV := toFloat64(b)
+
+		return aV < bV
 	}
 }
 

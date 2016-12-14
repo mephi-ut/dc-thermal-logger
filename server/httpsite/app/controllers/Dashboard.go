@@ -42,7 +42,7 @@ var groups = map[string]groupInfo {
 		"ServerRack5":		groupInfo{DefaultSensorId: 66,	SensorIds: []int{ 64,  65,  66 }},
 		"ServerRack4":		groupInfo{DefaultSensorId: 69,	SensorIds: []int{ 67,  68,  69 }},
 		"ServerRack3":		groupInfo{DefaultSensorId: 74,	SensorIds: []int{ 72,  73,  74 }},
-		"ServerRack2":		groupInfo{DefaultSensorId: 77,	SensorIds: []int{ 75,  76,  77 }},
+		"ServerRack2":		groupInfo{DefaultSensorId: 76,	SensorIds: []int{ 75,  76, -77 }},
 		"ServerRack1":		groupInfo{DefaultSensorId: 85,	SensorIds: []int{ 84,  83,  85 }},
 		"ServerRack0":		groupInfo{DefaultSensorId: 81,	SensorIds: []int{ 80,  82,  81 }},
 		"ServerRack6":		groupInfo{DefaultSensorId: 89,	SensorIds: []int{ 89,  88,  90 }},

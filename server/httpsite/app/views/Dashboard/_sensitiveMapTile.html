@@ -2,6 +2,10 @@
 	{{ if isEmpty . }}
 		NaN
 	{{ else }}
-		{{ .Value }}
+		{{ if flt .Value 0 }}
+			NaN
+		{{ else }}
+			{{ .Value }}
+		{{ end }}
 	{{ end }}
 </li>
